@@ -17,6 +17,11 @@ Yes
 
 Question 4
 ==========================
+Most common prefix bigrams:
+an 7399686
+in 8165787
+th 18487894
 
 Question 5
 ==========================
+'li' occurs	1303312 times.
