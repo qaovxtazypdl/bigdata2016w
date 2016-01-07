@@ -1,6 +1,6 @@
 Question 1
 =========================
-Most common prefix bigrams
+Most common prefix bigrams:
 
 th 83289
 an 32003
@@ -12,6 +12,8 @@ Question 2
 
 Question 3
 ==========================
+Running hadoop on altiscale success?
+Yes
 
 Question 4
 ==========================
