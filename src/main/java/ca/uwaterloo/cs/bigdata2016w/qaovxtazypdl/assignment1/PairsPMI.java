@@ -73,6 +73,26 @@ public class PairsPMI extends Configured implements Tool {
   }
 
   // Reducer: sums up all the counts.
+  private static class CountCombiner extends Reducer<Text, IntWritable, Text, IntWritable> {
+    // Reuse objects.
+    private final static IntWritable SUM = new IntWritable();
+
+    @Override
+    public void reduce(Text key, Iterable<IntWritable> values, Context context)
+        throws IOException, InterruptedException {
+      // Sum up values.
+      Iterator<IntWritable> iter = values.iterator();
+      int sum = 0;
+      while (iter.hasNext()) {
+        sum += iter.next().get();
+      }
+      SUM.set(sum);
+
+      context.write(key, SUM);
+    }
+  }
+
+  // Reducer: sums up all the counts.
   private static class CountReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
     // Reuse objects.
     private final static IntWritable SUM = new IntWritable();
@@ -258,7 +278,7 @@ public class PairsPMI extends Configured implements Tool {
     job1.setOutputFormatClass(TextOutputFormat.class);
 
     job1.setMapperClass(CountMapper.class);
-    job1.setCombinerClass(CountReducer.class);
+    job1.setCombinerClass(CountCombiner.class);
     job1.setReducerClass(CountReducer.class);
 
     job1.getConfiguration().setInt("mapred.max.split.size", 1024 * 1024 * 64);
