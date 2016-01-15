@@ -32,7 +32,6 @@ import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.ParserProperties;
 
 import tl.lin.data.pair.PairOfStrings;
-import tl.lin.data.map.HMapStIW;
 
 /**
  * Simple word count demo.
@@ -97,10 +96,10 @@ public class PairsPMI extends Configured implements Tool {
 
 
   // Mapper: emits (token, 1) for every word occurrence.
-  private static class PMIMapper extends Mapper<LongWritable, Text, Text, HMapStIW> {
+  private static class PMIMapper extends Mapper<LongWritable, Text, PairOfStrings, IntWritable> {
     // Reuse objects to save overhead of object creation.
-    private final static Text WORD = new Text();
-    private static final HMapStIW MAP = new HMapStIW();
+    private final static IntWritable ONE = new IntWritable(1);
+    private final static PairOfStrings KEY = new PairOfStrings();
 
     @Override
     public void map(LongWritable key, Text value, Context context)
@@ -125,36 +124,34 @@ public class PairsPMI extends Configured implements Tool {
         for (int j = 0; j < words.length; j++) {
           if (i == j) continue;
 
-          MAP.clear();
-          MAP.put(words[j], 1);
-          WORD.set(words[i]);
-          context.write(WORD, MAP);
+          KEY.set(words[i], words[j]);
+          context.write(KEY, ONE);
         }
       }
     }
   }
 
-  private static class PMICombiner extends Reducer<Text, HMapStIW, Text, HMapStIW> {
+  private static class PMICombiner extends Reducer<PairOfStrings, IntWritable, PairOfStrings, IntWritable> {
+    private final static IntWritable SUM = new IntWritable();
+
     @Override
-    public void reduce(Text key, Iterable<HMapStIW> values, Context context)
+    public void reduce(PairOfStrings key, Iterable<IntWritable> values, Context context)
         throws IOException, InterruptedException {
-      Iterator<HMapStIW> iter = values.iterator();
-      HMapStIW map = new HMapStIW();
-
+      int sum = 0;
+      Iterator<IntWritable> iter = values.iterator();
       while (iter.hasNext()) {
-        map.plus(iter.next());
+        sum += iter.next().get();
       }
-
-      context.write(key, map);
+      SUM.set(sum);
+      context.write(key, SUM);
     }
   }
 
   // Reducer: sums up all the counts.
-  private static class PMIReducer extends Reducer<Text, HMapStIW, PairOfStrings, FloatWritable>  {
+  private static class PMIReducer extends Reducer<PairOfStrings, IntWritable, PairOfStrings, FloatWritable>  {
     private HashMap<String, Integer> countMap = new HashMap<String, Integer>();
     private float pX = 0, pY = 0, pXY = 0;
     private static final FloatWritable PMI = new FloatWritable();
-    private static final PairOfStrings PMI_PAIR = new PairOfStrings();
 
     @Override
     public void setup(Context context) {
@@ -180,30 +177,25 @@ public class PairsPMI extends Configured implements Tool {
     }
 
     @Override
-    public void reduce(Text key, Iterable<HMapStIW> values, Context context)
+    public void reduce(PairOfStrings key, Iterable<IntWritable> values, Context context)
         throws IOException, InterruptedException {
-      Iterator<HMapStIW> iter = values.iterator();
-      HMapStIW map = new HMapStIW();
-
+      int coOccurrenceTimes = 0;
+      Iterator<IntWritable> iter = values.iterator();
       while (iter.hasNext()) {
-        map.plus(iter.next());
+        coOccurrenceTimes += iter.next().get();
       }
 
       int totalLines = countMap.get("*");
-      int totalKeyCount = countMap.get(key.toString());
+      int totalKeyCount = countMap.get(key.getKey());
+      int totalPairSecondOccurrenceTimes = countMap.get(key.getValue());
 
-      for (String pairSecond : map.keySet()) {
-        int coOccurrenceTimes = map.get(pairSecond);
-        int totalPairSecondOccurrenceTimes = countMap.get(pairSecond);
-        if (coOccurrenceTimes >= 10) {
-          pX = (float)totalKeyCount / totalLines;
-          pY = (float)totalPairSecondOccurrenceTimes / totalLines;
-          pXY = (float)coOccurrenceTimes / totalLines;
+      if (coOccurrenceTimes >= 10) {
+        pX = (float)totalKeyCount / totalLines;
+        pY = (float)totalPairSecondOccurrenceTimes / totalLines;
+        pXY = (float)coOccurrenceTimes / totalLines;
 
-          PMI.set((float) Math.log10(pXY / (pX * pY)));
-          PMI_PAIR.set(key.toString(), pairSecond);
-          context.write(PMI_PAIR, PMI);
-        }
+        PMI.set((float) Math.log10(pXY / (pX * pY)));
+        context.write(key, PMI);
       }
     }
   }
@@ -276,8 +268,8 @@ public class PairsPMI extends Configured implements Tool {
     FileInputFormat.setInputPaths(job2, new Path(args.input));
     FileOutputFormat.setOutputPath(job2, new Path(args.output));
 
-    job2.setMapOutputKeyClass(Text.class);
-    job2.setMapOutputValueClass(HMapStIW.class);
+    job2.setMapOutputKeyClass(PairOfStrings.class);
+    job2.setMapOutputValueClass(IntWritable.class);
     job2.setOutputKeyClass(PairOfStrings.class);
     job2.setOutputValueClass(FloatWritable.class);
     job2.setOutputFormatClass(TextOutputFormat.class);

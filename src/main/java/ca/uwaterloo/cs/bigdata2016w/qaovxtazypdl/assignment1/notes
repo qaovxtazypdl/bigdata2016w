@@ -1,74 +1,26 @@
-calculate log p(x,y)/p(x)p(y) = log(N(x,y)*N(T)/ N(y)*N(x))
+calculate log p(x,y)/p(x)p(y)
 
 where p(x) is prob of at least one occurrence on a line... etc
 
 
 hadoop jar target/bigdata2016w-0.1.0-SNAPSHOT.jar    ca.uwaterloo.cs.bigdata2016w.qaovxtazypdl.assignment1.StripesPMI    -input data/Shakespeare.txt -output cs489-2016w-lintool-a1-shakespeare-stripes -reducers 5
-
-
-
-SIDE DATA GENERATION
-mapper
-================
-input: lines of 100 words
-emit: (key: word, value:1) (unique word in line)
-emit: (key: *, value:1)    (per line)
-
-combiner
-==================
-simple sum
-
-reducer
-==================
-same as combiner
-emit (key:word, value:sum)
-
-
-
-
-STRIPES implementation
-mapper
-================
-input: lines of 100 words
-emit: (key: word, stripe otherWords)
-
-combiner
-================
-input: (key: word, stripe otherWords)
-emit: (key: word, stripe otherWords) (combined stripe)
-
-reducer
-================
-load side data into map
-input: (key: word, stripe otherWords)
-
-combine stripe => (key: word, stripe otherWords)
-	p(x) = map[x] / map[*]
-	p(y) = map[y] / map[*]
-	p(x,y) = stripe[y] / map[*]
-	calculate log p(x,y)/p(x)p(y) =
-	emit (x,y) => result
-
-
-
-
+hadoop jar target/bigdata2016w-0.1.0-SNAPSHOT.jar    ca.uwaterloo.cs.bigdata2016w.qaovxtazypdl.assignment1.PairsPMI    -input data/Shakespeare.txt -output cs489-2016w-lintool-a1-shakespeare-pairs -reducers 5
 
 
 PAIRS implementation
 mapper
 ================
-emit one (key: word:otherword, value:1)
-emit one (key: word:*, value:1)
-emit one (key: otherword:*, value:1)
-emit one (key: line:*, value:1)
+emit one (pair of strings, 1)
 
 combiner
 ================
+simple sum
 
 partitioner
 ================
-define sort so that * always come first
-send all same keys to same reducer
+send all keys with same first element to same reducer
 
 reducer
 ================
+simple sum,
+then calculate and print
