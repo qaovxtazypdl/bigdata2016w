@@ -87,7 +87,10 @@ public class PairsPMI extends Configured implements Tool {
         sum += iter.next().get();
       }
       SUM.set(sum);
-      context.write(key, SUM);
+
+      if (sum >= 10) {
+        context.write(key, SUM);
+      }
     }
   }
 
@@ -185,11 +188,10 @@ public class PairsPMI extends Configured implements Tool {
         coOccurrenceTimes += iter.next().get();
       }
 
-      int totalLines = countMap.get("*");
-      int totalKeyCount = countMap.get(key.getKey());
-      int totalPairSecondOccurrenceTimes = countMap.get(key.getValue());
-
       if (coOccurrenceTimes >= 10) {
+        int totalLines = countMap.get("*");
+        int totalKeyCount = countMap.get(key.getKey());
+        int totalPairSecondOccurrenceTimes = countMap.get(key.getValue());
         pX = (float)totalKeyCount / totalLines;
         pY = (float)totalPairSecondOccurrenceTimes / totalLines;
         pXY = (float)coOccurrenceTimes / totalLines;

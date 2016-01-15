@@ -88,7 +88,10 @@ public class StripesPMI extends Configured implements Tool {
         sum += iter.next().get();
       }
       SUM.set(sum);
-      context.write(key, SUM);
+
+      if (sum >= 10) {
+        context.write(key, SUM);
+      }
     }
   }
 
@@ -190,12 +193,12 @@ public class StripesPMI extends Configured implements Tool {
       }
 
       int totalLines = countMap.get("*");
-      int totalKeyCount = countMap.get(key.toString());
 
       for (String pairSecond : map.keySet()) {
         int coOccurrenceTimes = map.get(pairSecond);
-        int totalPairSecondOccurrenceTimes = countMap.get(pairSecond);
         if (coOccurrenceTimes >= 10) {
+          int totalPairSecondOccurrenceTimes = countMap.get(pairSecond);
+          int totalKeyCount = countMap.get(key.toString());
           pX = (float)totalKeyCount / totalLines;
           pY = (float)totalPairSecondOccurrenceTimes / totalLines;
           pXY = (float)coOccurrenceTimes / totalLines;
