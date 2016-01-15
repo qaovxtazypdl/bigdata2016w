@@ -193,8 +193,8 @@ public class StripesPMI extends Configured implements Tool {
         String line;
         while ((line = br.readLine()) != null) {
           String[] lineTokens = line.split("\\s+");
-          LOG.error("@@@@@@@@@@@@@@@!@@@@@@@ " + new Text(lineTokens[0]).toString() +  " written to map with value " + Integer.parseInt(lineTokens[1]));
-          countMap.put(new Text(lineTokens[0]).toString(), Integer.parseInt(lineTokens[1]));
+          LOG.error("@@@@@@@@@@@@@@@@@@@@@@ " + new Text(lineTokens[0].getBytes("UTF-8")).toString() +  " written to map with value " + Integer.parseInt(lineTokens[1]));
+          countMap.put(new Text(lineTokens[0].getBytes("UTF-8")).toString(), Integer.parseInt(lineTokens[1]));
         }
       }
     }
@@ -293,7 +293,7 @@ public class StripesPMI extends Configured implements Tool {
 
     job1.getConfiguration().setInt("mapred.max.split.size", 1024 * 1024 * 64);
     job1.getConfiguration().set("mapreduce.map.memory.mb", "3072");
-    job1.getConfiguration().set("mapreduce.map.java.opts", "-Xmx3072m -Dfile.encoding=UTF-16");
+    job1.getConfiguration().set("mapreduce.map.java.opts", "-Xmx3072m -Dfile.encoding=UTF-8");
     job1.getConfiguration().set("mapreduce.reduce.memory.mb", "3072");
     job1.getConfiguration().set("mapreduce.reduce.java.opts", "-Xmx3072m");
 
@@ -319,7 +319,7 @@ public class StripesPMI extends Configured implements Tool {
 
     job2.getConfiguration().setInt("mapred.max.split.size", 1024 * 1024 * 64);
     job2.getConfiguration().set("mapreduce.map.memory.mb", "3072");
-    job2.getConfiguration().set("mapreduce.map.java.opts", "-Xmx3072m -Dfile.encoding=UTF-16");
+    job2.getConfiguration().set("mapreduce.map.java.opts", "-Xmx3072m -Dfile.encoding=UTF-8");
     job2.getConfiguration().set("mapreduce.reduce.memory.mb", "3072");
     job2.getConfiguration().set("mapreduce.reduce.java.opts", "-Xmx3072m");
     // Delete the output directories if it exists already.
