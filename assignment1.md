@@ -24,8 +24,16 @@ Question 6
 (tears, shed)      2.1117902
 (tears, salt)      2.0528123
 (tears, eyes)      1.165167
+
 (death, father's)  1.120252
 (death, die)       0.75415933
 (death, life)      0.7381346
 
 Question 7
+(waterloo, napoleon)    1.9300983
+(waterloo, napoleonic)  1.8347998
+(waterloo, wellington)  1.5443927
+
+(toronto, argonauts)  2.782813
+(toronto, toronto's)  2.7605367
+(toronto, woodbine)   2.6550264

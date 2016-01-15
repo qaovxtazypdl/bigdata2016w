@@ -164,21 +164,17 @@ public class StripesPMI extends Configured implements Tool {
       Configuration conf = context.getConfiguration();
       Path sideDataDir = new Path(sideDataOutput);
 
-      try {
-        FileSystem fs = FileSystem.get(conf);
-        FileStatus[] status = fs.listStatus(sideDataDir);
+      FileSystem fs = FileSystem.get(conf);
+      FileStatus[] status = fs.listStatus(sideDataDir);
 
-        for (int i = 0;i < status.length; i++) {
-          if (!status[i].getPath().toString().contains("part-") || status[i].getPath().toString().contains(".crc")) continue;
-          BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(status[i].getPath())));
-          String line;
-          while ((line = br.readLine()) != null) {
-            String[] lineTokens = line.split("\t");
-            countMap.put(lineTokens[0], Integer.parseInt(lineTokens[1]));
-          }
+      for (int i = 0;i < status.length; i++) {
+        if (!status[i].getPath().toString().contains("part-") || status[i].getPath().toString().contains(".crc")) continue;
+        BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(status[i].getPath())));
+        String line;
+        while ((line = br.readLine()) != null) {
+          String[] lineTokens = line.split("\t");
+          countMap.put(lineTokens[0], Integer.parseInt(lineTokens[1]));
         }
-      } catch (Exception e) {
-        LOG.error("" + e.toString());
       }
     }
 
@@ -209,9 +205,9 @@ public class StripesPMI extends Configured implements Tool {
             context.write(PMI_PAIR, PMI);
           }
         } catch (Exception e) {
-          LOG.error("" + e.toString());
-          LOG.error("Failed on word " + pairSecond + " " + key.toString() + " " + totalLines);
-          LOG.error("More info: " + map.get(pairSecond));
+          LOG.error("" + e.getMessage());
+          LOG.error("Failed on word " + key.toString() + " " + pairSecond);
+          LOG.error("More info: " + countMap.get(key.toString()) + " " + countMap.get(pairSecond));
         }
       }
     }

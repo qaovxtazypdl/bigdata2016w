@@ -188,16 +188,22 @@ public class PairsPMI extends Configured implements Tool {
         coOccurrenceTimes += iter.next().get();
       }
 
-      if (coOccurrenceTimes >= 10) {
-        int totalLines = countMap.get("*");
-        int totalKeyCount = countMap.get(key.getKey());
-        int totalPairSecondOccurrenceTimes = countMap.get(key.getValue());
-        pX = (float)totalKeyCount / totalLines;
-        pY = (float)totalPairSecondOccurrenceTimes / totalLines;
-        pXY = (float)coOccurrenceTimes / totalLines;
+      try {
+        if (coOccurrenceTimes >= 10) {
+          int totalLines = countMap.get("*");
+          int totalKeyCount = countMap.get(key.getKey());
+          int totalPairSecondOccurrenceTimes = countMap.get(key.getValue());
+          pX = (float)totalKeyCount / totalLines;
+          pY = (float)totalPairSecondOccurrenceTimes / totalLines;
+          pXY = (float)coOccurrenceTimes / totalLines;
 
-        PMI.set((float) Math.log10(pXY / (pX * pY)));
-        context.write(key, PMI);
+          PMI.set((float) Math.log10(pXY / (pX * pY)));
+          context.write(key, PMI);
+        }
+      } catch (Exception e) {
+        LOG.error("" + e.getMessage());
+        LOG.error("Failed on word " + key.getKey() + " " + key.getValue());
+        LOG.error("More info: " + countMap.get(key.getKey()) + " " + countMap.get(key.getValue()));
       }
     }
   }
