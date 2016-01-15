@@ -186,7 +186,7 @@ public class PairsPMI extends Configured implements Tool {
 
       for (int i = 0;i < status.length; i++) {
         if (!status[i].getPath().toString().contains("part-") || status[i].getPath().toString().contains(".crc")) continue;
-        BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(status[i].getPath())));
+        BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(status[i].getPath()), "UTF-8"));
         String line;
         while ((line = br.readLine()) != null) {
           String[] lineTokens = line.split("\t");
@@ -284,6 +284,7 @@ public class PairsPMI extends Configured implements Tool {
     job1.getConfiguration().setInt("mapred.max.split.size", 1024 * 1024 * 64);
     job1.getConfiguration().set("mapreduce.map.memory.mb", "3072");
     job1.getConfiguration().set("mapreduce.map.java.opts", "-Xmx3072m");
+    job1.getConfiguration().set("mapreduce.map.java.opts", "-Xmx3072m");
     job1.getConfiguration().set("mapreduce.reduce.memory.mb", "3072");
     job1.getConfiguration().set("mapreduce.reduce.java.opts", "-Xmx3072m");
 
@@ -309,7 +310,7 @@ public class PairsPMI extends Configured implements Tool {
 
     job2.getConfiguration().setInt("mapred.max.split.size", 1024 * 1024 * 64);
     job2.getConfiguration().set("mapreduce.map.memory.mb", "3072");
-    job2.getConfiguration().set("mapreduce.map.java.opts", "-Xmx3072m");
+    job1.getConfiguration().set("mapreduce.map.java.opts", "-Xmx3072m");
     job2.getConfiguration().set("mapreduce.reduce.memory.mb", "3072");
     job2.getConfiguration().set("mapreduce.reduce.java.opts", "-Xmx3072m");
 
