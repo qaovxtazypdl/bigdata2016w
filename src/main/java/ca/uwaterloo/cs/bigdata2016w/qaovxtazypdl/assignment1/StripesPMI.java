@@ -212,7 +212,7 @@ public class StripesPMI extends Configured implements Tool {
       int totalLines = countMap.get("*");
 
       for (String pairSecond : map.keySet()) {
-        if (key.toString().equalsIgnoreCase("zürich")) LOG.error("@@@@@@@@@@@@@@@@@@@@@@ zürich has value of " + countMap.get(key.toString()));
+        if (key.toString().equalsIgnoreCase("zürich")) LOG.error("@@@@@@@@@@@@@@@@@@@@@@ zürich has value of " + countMap.get(key.toString()) + " " + countMap.get("zürich"));
         try {
           int coOccurrenceTimes = map.get(pairSecond);
           if (coOccurrenceTimes >= 10) {
