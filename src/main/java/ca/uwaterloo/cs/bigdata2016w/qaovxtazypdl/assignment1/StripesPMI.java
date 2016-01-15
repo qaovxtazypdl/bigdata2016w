@@ -193,8 +193,8 @@ public class StripesPMI extends Configured implements Tool {
         String line;
         while ((line = br.readLine()) != null) {
           String[] lineTokens = line.split("\\s+");
-          LOG.error("@@@@@@@@@@@@@@@@@@@@@@ " + lineTokens[0] +  " written to map with value " + Integer.parseInt(lineTokens[1]));
-          countMap.put(lineTokens[0], Integer.parseInt(lineTokens[1]));
+          LOG.error("@@@@@@@@@@@@@@@@@@@@@@ " + new Text(lineTokens[0]).toString() +  " written to map with value " + Integer.parseInt(lineTokens[1]));
+          countMap.put(new Text(lineTokens[0]).toString(), Integer.parseInt(lineTokens[1]));
         }
       }
     }
