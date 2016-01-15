@@ -1,26 +1,2 @@
-calculate log p(x,y)/p(x)p(y)
-
-where p(x) is prob of at least one occurrence on a line... etc
-
-
 hadoop jar target/bigdata2016w-0.1.0-SNAPSHOT.jar    ca.uwaterloo.cs.bigdata2016w.qaovxtazypdl.assignment1.StripesPMI    -input data/Shakespeare.txt -output cs489-2016w-lintool-a1-shakespeare-stripes -reducers 5
 hadoop jar target/bigdata2016w-0.1.0-SNAPSHOT.jar    ca.uwaterloo.cs.bigdata2016w.qaovxtazypdl.assignment1.PairsPMI    -input data/Shakespeare.txt -output cs489-2016w-lintool-a1-shakespeare-pairs -reducers 5
-
-
-PAIRS implementation
-mapper
-================
-emit one (pair of strings, 1)
-
-combiner
-================
-simple sum
-
-partitioner
-================
-send all keys with same first element to same reducer
-
-reducer
-================
-simple sum,
-then calculate and print
