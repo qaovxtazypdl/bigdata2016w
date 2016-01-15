@@ -46,13 +46,17 @@ public class StripesPMI extends Configured implements Tool {
     // Reuse objects to save overhead of object creation.
     private final static IntWritable ONE = new IntWritable(1);
     private final static Text WORD = new Text();
-
+    
     @Override
     public void map(LongWritable key, Text value, Context context)
         throws IOException, InterruptedException {
       String line = ((Text) value).toString();
       StringTokenizer itr = new StringTokenizer(line);
 
+      if (line.toLowerCase().contains("zygmunt")) {
+    	  LOG.info(line);
+      }
+      	
       int cnt = 0;
       HashSet<String> set = new HashSet<String>();
       while (itr.hasMoreTokens()) {
@@ -64,6 +68,9 @@ public class StripesPMI extends Configured implements Tool {
       }
 
       for (String word : set) {
+    	if (word.equalsIgnoreCase("zygmunt")) {
+    		LOG.error("zygmunt found, writing.");
+    	}
         WORD.set(word);
         context.write(WORD, ONE);
       }
