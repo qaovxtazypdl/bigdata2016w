@@ -2,7 +2,6 @@ package ca.uwaterloo.cs.bigdata2016w.qaovxtazypdl.assignment1;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.HashSet;
 import java.util.StringTokenizer;
@@ -154,7 +153,7 @@ public class StripesPMI extends Configured implements Tool {
 
   // Reducer: sums up all the counts.
   private static class PMIReducer extends Reducer<Text, HMapStIW, PairOfStrings, FloatWritable>  {
-    private HashMap<String, Integer> countMap = new HashMap<String, Integer>();
+    private HMapStIW countMap = new HMapStIW();
     private float pX = 0, pY = 0, pXY = 0;
     private static final FloatWritable PMI = new FloatWritable();
     private static final PairOfStrings PMI_PAIR = new PairOfStrings();
