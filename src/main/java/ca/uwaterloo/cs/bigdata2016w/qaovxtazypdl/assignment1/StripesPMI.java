@@ -205,7 +205,7 @@ public class StripesPMI extends Configured implements Tool {
             context.write(PMI_PAIR, PMI);
           }
         } catch (Exception e) {
-          LOG.error("" + e.getMessage());
+          LOG.error(e.toString());
           LOG.error("Failed on word " + key.toString() + " " + pairSecond);
           LOG.error("More info: " + countMap.get(key.toString()) + " " + countMap.get(pairSecond));
         }
