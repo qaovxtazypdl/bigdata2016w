@@ -160,7 +160,7 @@ public class StripesPMI extends Configured implements Tool {
     private static final PairOfStrings PMI_PAIR = new PairOfStrings();
 
     @Override
-    public void setup(Context context) {
+    public void setup(Context context) throws IOException {
       Configuration conf = context.getConfiguration();
       Path sideDataDir = new Path(sideDataOutput);
 
