@@ -206,12 +206,8 @@ public class StripesPMI extends Configured implements Tool {
           }
         } catch (Exception e) {
           LOG.error(e.toString());
-          LOG.error("Failed on word " + key.toString() + " " + pairSecond);
+          LOG.error("Failed on word " + key + " " + key.toString() + " " + pairSecond);
           LOG.error("More info: " + countMap.get(key.toString()) + " " + countMap.get(pairSecond));
-          
-          for (String debugString : map.keySet()) {
-        	  LOG.error(debugString + " " + map.get(debugString));
-          }
         }
       }
     }

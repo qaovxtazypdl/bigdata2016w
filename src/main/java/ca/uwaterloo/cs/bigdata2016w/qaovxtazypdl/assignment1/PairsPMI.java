@@ -198,7 +198,7 @@ public class PairsPMI extends Configured implements Tool {
         }
       } catch (Exception e) {
         LOG.error(e.toString());
-        LOG.error("Failed on word " + key.getKey() + " " + key.getValue());
+        LOG.error("Failed on word " + key + " " + key.getKey() + " " + key.getValue());
         LOG.error("More info: " + countMap.get(key.getKey()) + " " + countMap.get(key.getValue()));
       }
     }
