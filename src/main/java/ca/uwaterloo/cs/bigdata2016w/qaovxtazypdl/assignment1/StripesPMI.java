@@ -195,17 +195,23 @@ public class StripesPMI extends Configured implements Tool {
       int totalLines = countMap.get("*");
 
       for (String pairSecond : map.keySet()) {
-        int coOccurrenceTimes = map.get(pairSecond);
-        if (coOccurrenceTimes >= 10) {
-          int totalPairSecondOccurrenceTimes = countMap.get(pairSecond);
-          int totalKeyCount = countMap.get(key.toString());
-          pX = (float)totalKeyCount / totalLines;
-          pY = (float)totalPairSecondOccurrenceTimes / totalLines;
-          pXY = (float)coOccurrenceTimes / totalLines;
+        try {
+          int coOccurrenceTimes = map.get(pairSecond);
+          if (coOccurrenceTimes >= 10) {
+            int totalPairSecondOccurrenceTimes = countMap.get(pairSecond);
+            int totalKeyCount = countMap.get(key.toString());
+            pX = (float)totalKeyCount / totalLines;
+            pY = (float)totalPairSecondOccurrenceTimes / totalLines;
+            pXY = (float)coOccurrenceTimes / totalLines;
 
-          PMI.set((float) Math.log10(pXY / (pX * pY)));
-          PMI_PAIR.set(key.toString(), pairSecond);
-          context.write(PMI_PAIR, PMI);
+            PMI.set((float) Math.log10(pXY / (pX * pY)));
+            PMI_PAIR.set(key.toString(), pairSecond);
+            context.write(PMI_PAIR, PMI);
+          }
+        } catch (Exception e) {
+          LOG.info("" + e.toString());
+          LOG.info("Failed on word " + pairSecond + " " + key.toString() + " " + totalLines);
+          LOG.info("More info: " + map.get(pairSecond));
         }
       }
     }
