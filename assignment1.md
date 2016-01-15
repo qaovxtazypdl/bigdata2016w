@@ -19,6 +19,7 @@ Question 4
 
 Question 5
 (maine, anjou)     3.6331422
+Apparently, Maine and Anjou were two territories in france and one on Shakespeare's plays featured Margaret, wife of Henry IV, in which she receives the lands of Maine and Anjou. I would imagine that the two are mentioned within the same context many times, while being mentioned very rarely or none at all by itself.
 
 Question 6
 (tears, shed)      2.1117902
@@ -40,4 +41,3 @@ Question 7
 
 
 TODO: Q1, explantations, cleanup
-TODO: find out why some words aren't getting put into the map...

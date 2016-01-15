@@ -189,12 +189,12 @@ public class StripesPMI extends Configured implements Tool {
 
       for (int i = 0;i < status.length; i++) {
         if (!status[i].getPath().toString().contains("part-") || status[i].getPath().toString().contains(".crc")) continue;
-        BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(status[i].getPath())));
+        BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(status[i].getPath()), "UTF-8"));
         String line;
         while ((line = br.readLine()) != null) {
           String[] lineTokens = line.split("\\s+");
-          LOG.error("@@@@@@@@@@@@@@@@@@@@@@ " + new Text(lineTokens[0].getBytes("UTF-8")).toString() +  " written to map with value " + Integer.parseInt(lineTokens[1]));
-          countMap.put(new Text(lineTokens[0].getBytes("UTF-8")).toString(), Integer.parseInt(lineTokens[1]));
+          LOG.error("@@@@@@@@@@@@@@@@@@@@@@ " + lineTokens[0] +  " written to map with value " + Integer.parseInt(lineTokens[1]));
+          countMap.put(lineTokens[0], Integer.parseInt(lineTokens[1]));
         }
       }
     }
