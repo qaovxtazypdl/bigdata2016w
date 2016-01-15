@@ -169,7 +169,7 @@ public class StripesPMI extends Configured implements Tool {
 
       for (int i = 0;i < status.length; i++) {
         if (!status[i].getPath().toString().contains("part-") || status[i].getPath().toString().contains(".crc")) continue;
-        BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(status[i].getPath())));
+        BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(status[i].getPath()), "UTF-8"));
         String line;
         while ((line = br.readLine()) != null) {
           String[] lineTokens = line.split("\t");
