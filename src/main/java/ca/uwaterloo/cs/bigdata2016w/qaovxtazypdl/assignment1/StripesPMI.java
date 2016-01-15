@@ -90,6 +90,9 @@ public class StripesPMI extends Configured implements Tool {
       SUM.set(sum);
 
       //if (sum >= 10) {
+        if (key.equals("zygmunt")) {
+          LOG.error("@@@@@@@@@@@@@@@@@@@@" + sum);
+        }
         context.write(key, SUM);
       //}
     }
