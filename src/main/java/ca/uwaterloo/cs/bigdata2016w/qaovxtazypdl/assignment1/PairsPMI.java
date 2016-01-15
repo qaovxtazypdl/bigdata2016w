@@ -157,25 +157,21 @@ public class PairsPMI extends Configured implements Tool {
     private static final FloatWritable PMI = new FloatWritable();
 
     @Override
-    public void setup(Context context) {
+    public void setup(Context context) throws IOException {
       Configuration conf = context.getConfiguration();
       Path sideDataDir = new Path(sideDataOutput);
 
-      try {
-        FileSystem fs = FileSystem.get(conf);
-        FileStatus[] status = fs.listStatus(sideDataDir);
+      FileSystem fs = FileSystem.get(conf);
+      FileStatus[] status = fs.listStatus(sideDataDir);
 
-        for (int i = 0;i < status.length; i++) {
-          if (!status[i].getPath().toString().contains("part-") || status[i].getPath().toString().contains(".crc")) continue;
-          BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(status[i].getPath())));
-          String line;
-          while ((line = br.readLine()) != null) {
-            String[] lineTokens = line.split("\t");
-            countMap.put(lineTokens[0], Integer.parseInt(lineTokens[1]));
-          }
+      for (int i = 0;i < status.length; i++) {
+        if (!status[i].getPath().toString().contains("part-") || status[i].getPath().toString().contains(".crc")) continue;
+        BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(status[i].getPath())));
+        String line;
+        while ((line = br.readLine()) != null) {
+          String[] lineTokens = line.split("\t");
+          countMap.put(lineTokens[0], Integer.parseInt(lineTokens[1]));
         }
-      } catch (Exception e) {
-        e.printStackTrace();
       }
     }
 

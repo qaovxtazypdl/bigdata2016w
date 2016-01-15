@@ -37,3 +37,7 @@ Question 7
 (toronto, argonauts)  2.782813
 (toronto, toronto's)  2.7605367
 (toronto, woodbine)   2.6550264
+
+
+TODO: Q1, explantations, cleanup
+TODO: find out why some words aren't getting put into the map...
