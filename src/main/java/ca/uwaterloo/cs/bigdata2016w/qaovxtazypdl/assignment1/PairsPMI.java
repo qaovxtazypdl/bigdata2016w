@@ -152,7 +152,7 @@ public class PairsPMI extends Configured implements Tool {
 
   // Reducer: sums up all the counts.
   private static class PMIReducer extends Reducer<PairOfStrings, IntWritable, PairOfStrings, FloatWritable>  {
-    private HMapStIW countMap = new HMapStIW();
+    private HashMap<String, Integer> countMap = new HashMap<String, Integer>();
     private float pX = 0, pY = 0, pXY = 0;
     private static final FloatWritable PMI = new FloatWritable();
 
