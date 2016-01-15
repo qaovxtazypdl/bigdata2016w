@@ -192,8 +192,8 @@ public class StripesPMI extends Configured implements Tool {
         BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(status[i].getPath())));
         String line;
         while ((line = br.readLine()) != null) {
-          String[] lineTokens = line.split("\t");
-          if (lineTokens[0].equalsIgnoreCase("zürich")) LOG.error("@@@@@@@@@@@@@@@@@@@@@@ zurich written to map with value " + Integer.parseInt(lineTokens[1]));
+          String[] lineTokens = line.split("\\s+");
+          LOG.error("@@@@@@@@@@@@@@@@@@@@@@ " + lineTokens[0] +  " written to map with value " + Integer.parseInt(lineTokens[1]));
           countMap.put(lineTokens[0], Integer.parseInt(lineTokens[1]));
         }
       }
@@ -212,7 +212,6 @@ public class StripesPMI extends Configured implements Tool {
       int totalLines = countMap.get("*");
 
       for (String pairSecond : map.keySet()) {
-        if (key.toString().equalsIgnoreCase("zürich")) LOG.error("@@@@@@@@@@@@@@@@@@@@@@ zürich has value of " + countMap.get(key.toString()) + " " + countMap.get("zürich"));
         try {
           int coOccurrenceTimes = map.get(pairSecond);
           if (coOccurrenceTimes >= 10) {
