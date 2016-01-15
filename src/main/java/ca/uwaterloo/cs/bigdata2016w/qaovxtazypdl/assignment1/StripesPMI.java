@@ -178,7 +178,7 @@ public class StripesPMI extends Configured implements Tool {
           }
         }
       } catch (Exception e) {
-        e.printStackTrace();
+        LOG.error("" + e.toString());
       }
     }
 
@@ -209,9 +209,9 @@ public class StripesPMI extends Configured implements Tool {
             context.write(PMI_PAIR, PMI);
           }
         } catch (Exception e) {
-          LOG.info("" + e.toString());
-          LOG.info("Failed on word " + pairSecond + " " + key.toString() + " " + totalLines);
-          LOG.info("More info: " + map.get(pairSecond));
+          LOG.error("" + e.toString());
+          LOG.error("Failed on word " + pairSecond + " " + key.toString() + " " + totalLines);
+          LOG.error("More info: " + map.get(pairSecond));
         }
       }
     }
