@@ -142,6 +142,11 @@
       <artifactId>spark-core_2.10</artifactId>
       <version>${spark.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.rogach</groupId>
+      <artifactId>scallop_2.10</artifactId>
+      <version>0.9.5</version>
+    </dependency>
   </dependencies>
 
 </project>

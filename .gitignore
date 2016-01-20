@@ -30,3 +30,4 @@ project/plugins/project/
 
 # Repo Specific
 data/
+/bin/
