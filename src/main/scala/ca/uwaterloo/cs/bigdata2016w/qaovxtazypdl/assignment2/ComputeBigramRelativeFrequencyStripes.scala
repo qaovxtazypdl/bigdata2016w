@@ -12,26 +12,22 @@ object ComputeBigramRelativeFrequencyStripes extends Tokenizer {
   val log = Logger.getLogger(getClass().getName())
 
   def getStripes(line: String): Iterator[(String, HashMap[String, Float])] = {
-    val list = tokenize(line)
+    val tokens = tokenize(line)
     val listOfStripes = new HashMap[String, HashMap[String, Float]]()
 
-    if (list.length < 2) return listOfStripes.iterator
+    if (tokens.length < 2) return listOfStripes.iterator
 
-    for(i <- 1 until list.length){
-      val first = list(i-1)
-      val second = list(i)
-      if (!listOfStripes.contains(first)) listOfStripes.put(first, new HashMap[String, Float]() { override def default(key: String) = 0 })
-      listOfStripes(first).put(second, listOfStripes(first)(second) + 1)
-    }
+    tokens.sliding(2).foreach(slidingPair => {
+      if (!listOfStripes.contains(slidingPair(0))) listOfStripes.put(slidingPair(0), new HashMap[String, Float]() { override def default(key: String) = 0 })
+      listOfStripes(slidingPair(0)).put(slidingPair(1), listOfStripes(slidingPair(0))(slidingPair(1)) + 1)
+    })
 
-    listOfStripes.iterator
+    return listOfStripes.iterator
   }
 
   def reduceStripe(s1: HashMap[String, Float], s2: HashMap[String, Float]): HashMap[String, Float] = {
-    val result = new HashMap[String, Float]() { override def default(key: String) = 0 } ++= s1
-    s2.foreach{case(key, value) => result.put(key, result(key) + value)}
-
-    result
+    s2.foreach{case(key, value) => s1.put(key, s1(key) + value)}
+    s1
   }
 
   def mapReducedStripes(stripe: (String, HashMap[String, Float])): (String, HashMap[String, Float]) = {
