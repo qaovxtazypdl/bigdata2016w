@@ -7,39 +7,46 @@ import org.apache.log4j._
 import org.apache.hadoop.fs._
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkConf
+import org.apache.spark.Partitioner
 import org.rogach.scallop._
 
-object ComputeBigramRelativeFrequencyStripes extends Tokenizer {
+class BigramPartitioner(partitions: Int) extends Partitioner {
+  def getPartition(key: Any): Int = {
+    val modulus = key.asInstanceOf[(String, String)]._1.hashCode % partitions
+    if (modulus < 0) modulus + partitions else modulus
+  }
+
+  def numPartitions(): Int = {partitions}
+}
+
+object ComputeBigramRelativeFrequencyPairs extends Tokenizer {
   val log = Logger.getLogger(getClass().getName())
 
-  def getStripes(line: String): Iterator[(String, HashMap[String, Int])] = {
-    val list = tokenize(line)
-    val listOfStripes = new HashMap[String, HashMap[String, Int]]()
+  def getPairs(line: String): Iterator[((String, String), Int)] = {
+    val tokens = tokenize(line)
+    if (tokens.length < 2) return List().iterator
 
-    if (list.length < 2) return listOfStripes.iterator
-
-    for(i <- 1 until list.length){
-      if (!listOfStripes.contains(list(i-1))) listOfStripes.put(list(i-1), new HashMap[String, Int]() { override def default(key: String) = 0 })
-
-      listOfStripes(list(i-1)).put(list(i), listOfStripes(list(i-1))(list(i)) + 1)
-    }
-
-    listOfStripes.iterator
+    tokens.sliding(2).flatMap(slidingPair => List(
+      ( (slidingPair(0), slidingPair(1)) , 1),
+      ( (slidingPair(0), "*"), 1)
+    )).toList.iterator
   }
 
-  def reduceStripe(s1: HashMap[String, Int], s2: HashMap[String, Int]): HashMap[String, Int] = {
-    val result = new HashMap[String, Int]() { override def default(key: String) = 0 } ++= s1
-    s2.foreach{case(key, value) => result.put(key, result(key) + value)}
+  def processPartition(partitionIndex: Int, partitionData: Iterator[((String, String), Int)]): Iterator[((String, String), Float)] = {
+    val marginalCounts = new HashMap[String, Int]()
+    partitionData.foreach(pair => {
+      if (pair._1._2 equals "*") {
+        marginalCounts.put(pair._1._1, pair._2)
+      }
+    })
 
-    result
-  }
-
-  def mapReducedStripes(stripe: (String, HashMap[String, Int])): (String, HashMap[String, Float]) = {
-    var sum : Float = 0
-    val bigramRelativeFreqs = new HashMap[String, Float]()
-    stripe._2.foreach(sum += _._2)
-    stripe._2.foreach(x => bigramRelativeFreqs.put(x._1, x._2 / sum))
-    (stripe._1, bigramRelativeFreqs)
+    partitionData.flatMap(pair => {
+      if (!(pair._1._2 equals "*")) {
+        return List((pair._1, pair._2 / marginalCounts(pair._1._1).toFloat)).iterator
+      } else {
+        return List().iterator
+      }
+    })
   }
 
   def main(argv: Array[String]) {
@@ -56,10 +63,11 @@ object ComputeBigramRelativeFrequencyStripes extends Tokenizer {
     FileSystem.get(sc.hadoopConfiguration).delete(outputDir, true)
 
     val textFile = sc.textFile(args.input())
-
-    textFile.flatMap(getStripes(_))
-      .reduceByKey(reduceStripe(_, _), args.reducers())
-      .map(mapReducedStripes(_))
+    textFile
+      .flatMap(getPairs(_))
+      .reduceByKey(_ + _, args.reducers())
+      .repartitionAndSortWithinPartitions(new BigramPartitioner(args.reducers()))
+      .mapPartitionsWithIndex(processPartition(_, _))
       .saveAsTextFile(args.output())
   }
 }

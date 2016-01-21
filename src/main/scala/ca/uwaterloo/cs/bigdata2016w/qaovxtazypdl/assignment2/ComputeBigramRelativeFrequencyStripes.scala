@@ -19,14 +19,14 @@ class Conf(args: Seq[String]) extends ScallopConf(args) with Tokenizer {
 object ComputeBigramRelativeFrequencyStripes extends Tokenizer {
   val log = Logger.getLogger(getClass().getName())
 
-  def getStripes(line: String): Iterator[(String, HashMap[String, Int])] = {
+  def getStripes(line: String): Iterator[(String, HashMap[String, Float])] = {
     val list = tokenize(line)
-    val listOfStripes = new HashMap[String, HashMap[String, Int]]()
+    val listOfStripes = new HashMap[String, HashMap[String, Float]]()
 
     if (list.length < 2) return listOfStripes.iterator
 
     for(i <- 1 until list.length){
-      if (!listOfStripes.contains(list(i-1))) listOfStripes.put(list(i-1), new HashMap[String, Int]() { override def default(key: String) = 0 })
+      if (!listOfStripes.contains(list(i-1))) listOfStripes.put(list(i-1), new HashMap[String, Float]() { override def default(key: String) = 0 })
 
       listOfStripes(list(i-1)).put(list(i), listOfStripes(list(i-1))(list(i)) + 1)
     }
@@ -34,19 +34,18 @@ object ComputeBigramRelativeFrequencyStripes extends Tokenizer {
     listOfStripes.iterator
   }
 
-  def reduceStripe(s1: HashMap[String, Int], s2: HashMap[String, Int]): HashMap[String, Int] = {
-    val result = new HashMap[String, Int]() { override def default(key: String) = 0 } ++= s1
+  def reduceStripe(s1: HashMap[String, Float], s2: HashMap[String, Float]): HashMap[String, Float] = {
+    val result = new HashMap[String, Float]() { override def default(key: String) = 0 } ++= s1
     s2.foreach{case(key, value) => result.put(key, result(key) + value)}
 
     result
   }
 
-  def mapReducedStripes(stripe: (String, HashMap[String, Int])): (String, HashMap[String, Float]) = {
+  def mapReducedStripes(stripe: (String, HashMap[String, Float])): (String, HashMap[String, Float]) = {
     var sum : Float = 0
-    val bigramRelativeFreqs = new HashMap[String, Float]()
     stripe._2.foreach(sum += _._2)
-    stripe._2.foreach(x => bigramRelativeFreqs.put(x._1, x._2 / sum))
-    (stripe._1, bigramRelativeFreqs)
+    stripe._2.foreach(x => stripe._2.put(x._1, x._2 / sum))
+    stripe
   }
 
   def main(argv: Array[String]) {
