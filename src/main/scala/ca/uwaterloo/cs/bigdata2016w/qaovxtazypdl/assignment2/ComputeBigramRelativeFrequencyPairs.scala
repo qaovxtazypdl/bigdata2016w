@@ -1,6 +1,6 @@
 package ca.uwaterloo.cs.bigdata2016w.qaovxtazypdl.assignment2
 
-import util.Tokenizer
+import util._
 import scala.collection.mutable.{HashMap}
 
 import org.apache.log4j._
@@ -8,7 +8,6 @@ import org.apache.hadoop.fs._
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkConf
 import org.apache.spark.Partitioner
-import org.rogach.scallop._
 
 class BigramPartitioner(partitions: Int) extends Partitioner {
   def getPartition(key: Any): Int = {
