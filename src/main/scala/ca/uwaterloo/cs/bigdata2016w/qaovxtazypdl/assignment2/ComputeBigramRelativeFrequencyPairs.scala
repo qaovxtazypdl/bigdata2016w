@@ -32,19 +32,15 @@ object ComputeBigramRelativeFrequencyPairs extends Tokenizer {
     )).toList.iterator
   }
 
-  def processPartition(partitionIndex: Int, partitionData: Iterator[((String, String), Int)]): Iterator[((String, String), Float)] = {
-    val marginalCounts = new HashMap[String, Int]()
-    partitionData.foreach(pair => {
-      if (pair._1._2 equals "*") {
-        marginalCounts.put(pair._1._1, pair._2)
-      }
-    })
+  def processPartition(partitionData: Iterator[((String, String), Int)]): Iterator[((String, String), Float)] = {
+    var marginalCount = 0
 
-    partitionData.flatMap(pair => {
-      if (!(pair._1._2 equals "*")) {
-        return List((pair._1, pair._2 / marginalCounts(pair._1._1).toFloat)).iterator
+    partitionData.map(pair => {
+      if (pair._1._2 equals "*") {
+        marginalCount = pair._2
+        (pair._1, pair._2)
       } else {
-        return List().iterator
+        (pair._1, pair._2 / marginalCount.toFloat)
       }
     })
   }
@@ -67,7 +63,7 @@ object ComputeBigramRelativeFrequencyPairs extends Tokenizer {
       .flatMap(getPairs(_))
       .reduceByKey(_ + _, args.reducers())
       .repartitionAndSortWithinPartitions(new BigramPartitioner(args.reducers()))
-      .mapPartitionsWithIndex(processPartition(_, _))
+      .mapPartitions(processPartition(_))
       .saveAsTextFile(args.output())
   }
 }
