@@ -18,9 +18,10 @@ object ComputeBigramRelativeFrequencyStripes extends Tokenizer {
     if (list.length < 2) return listOfStripes.iterator
 
     for(i <- 1 until list.length){
-      if (!listOfStripes.contains(list(i-1))) listOfStripes.put(list(i-1), new HashMap[String, Float]() { override def default(key: String) = 0 })
-
-      listOfStripes(list(i-1)).put(list(i), listOfStripes(list(i-1))(list(i)) + 1)
+      val first = list(i-1)
+      val second = list(i)
+      if (!listOfStripes.contains(first)) listOfStripes.put(first, new HashMap[String, Float]() { override def default(key: String) = 0 })
+      listOfStripes(first).put(second, listOfStripes(first)(second) + 1)
     }
 
     listOfStripes.iterator
