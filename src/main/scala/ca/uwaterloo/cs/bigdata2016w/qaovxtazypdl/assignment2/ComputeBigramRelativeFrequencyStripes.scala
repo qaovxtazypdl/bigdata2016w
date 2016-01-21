@@ -26,7 +26,12 @@ object ComputeBigramRelativeFrequencyStripes extends Tokenizer {
   }
 
   def reduceStripe(s1: HashMap[String, Float], s2: HashMap[String, Float]): HashMap[String, Float] = {
-    s2.foreach{case(key, value) => s1.put(key, s1(key) + value)}
+    s2.foreach{case(key, value) => {
+      if (s1 contains key)
+        s1.put(key, s1(key) + value)
+      else
+        s1.put(key, value)
+    }}
     s1
   }
 
