@@ -55,7 +55,7 @@ object ComputeBigramRelativeFrequencyStripes extends Tokenizer {
     val textFile = sc.textFile(args.input())
 
     textFile.flatMap(getStripes(_))
-      //.reduceByKey(reduceStripe(_, _), args.reducers())
+      .reduceByKey(reduceStripe(_, _), args.reducers())
       .map(mapReducedStripes(_))
       .saveAsTextFile(args.output())
   }
