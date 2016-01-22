@@ -13,26 +13,23 @@ object ComputeBigramRelativeFrequencyStripes extends Tokenizer {
 
   def getStripes(line: String): Iterator[(String, HashMap[String, Float])] = {
     val tokens = tokenize(line)
-    val listOfStripes = new HashMap[String, HashMap[String, Float]]()
+    if (tokens.length < 2) return List().iterator
 
-    if (tokens.length < 2) return listOfStripes.iterator
-
-    tokens.sliding(2).foreach(slidingPair => {
-      if (!listOfStripes.contains(slidingPair(0))) listOfStripes.put(slidingPair(0), new HashMap[String, Float]() { override def default(key: String) = 0 })
-      listOfStripes(slidingPair(0)).put(slidingPair(1), listOfStripes(slidingPair(0))(slidingPair(1)) + 1)
+    tokens.sliding(2).map(slidingPair => {
+      val hmap = new HashMap[String, Float]()
+      hmap.put(slidingPair(1), 1)
+      (slidingPair(0), hmap)
     })
-
-    return listOfStripes.iterator
   }
 
   def reduceStripe(s1: HashMap[String, Float], s2: HashMap[String, Float]): HashMap[String, Float] = {
-    s2.foreach{case(key, value) => {
-      if (s1 contains key)
-        s1.put(key, s1(key) + value)
-      else
-        s1.put(key, value)
-    }}
-    s1
+    if (s1.size > s2.size) {
+      s2.foreach{case(key, value) => s1.put(key, s1.getOrElse(key, 0f) + value)}
+      s1
+    } else {
+      s1.foreach{case(key, value) => s2.put(key, s2.getOrElse(key, 0f) + value)}
+      s2
+    }
   }
 
   def mapReducedStripes(stripe: (String, HashMap[String, Float])): (String, HashMap[String, Float]) = {
