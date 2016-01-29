@@ -121,9 +121,11 @@ public class BooleanRetrievalCompressed extends Configured implements Tool {
       ByteArrayInputStream postingByteStream = new ByteArrayInputStream(postings.getRightElement().getBytes());
       DataInputStream postingStream = new DataInputStream(postingByteStream);
 
+      int docid = 0;
       for (int i = 0; i < count; i++) {
-        int docid = WritableUtils.readVInt(postingStream);
+        int docGap = WritableUtils.readVInt(postingStream);
         int ct = WritableUtils.readVInt(postingStream);
+        docid += docGap;
         set.add(docid);
       }
     }

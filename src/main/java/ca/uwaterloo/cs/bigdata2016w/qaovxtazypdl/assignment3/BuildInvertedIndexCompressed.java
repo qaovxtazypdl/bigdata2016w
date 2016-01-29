@@ -99,12 +99,24 @@ public class BuildInvertedIndexCompressed extends Configured implements Tool {
 
     private static String prevKey = null;
     private static int df = 0;
+    private static int prevDocId = 0;
 
     @Override
     public void setup(Context context) throws IOException, InterruptedException {
       prevKey = null;
-      postingByteStream.reset();
-      df = 0;
+    }
+
+    private void writeCurrentAndReset(Context context)
+      throws IOException, InterruptedException {
+        DF.set(df);
+        postingByteStream.flush();
+        postingList.set(postingByteStream.toByteArray(), 0, postingByteStream.size());
+        term.set(prevKey);
+        context.write(term, new PairOfWritables<IntWritable, BytesWritable>(DF, postingList));
+
+        postingByteStream.reset();
+        df = 0;
+        prevDocId = 0;
     }
 
     @Override
@@ -113,22 +125,19 @@ public class BuildInvertedIndexCompressed extends Configured implements Tool {
       // key is term,docid    values are counts
       // output key, <sizeoflist, listof(docid, count)>
       String termString = key.getLeftElement();
-      int docid = key.getRightElement();
       if (prevKey != null && !prevKey.equals(termString)) {
         //emit previous, reset
-        DF.set(df);
-        postingByteStream.flush();
-        postingList.set(postingByteStream.toByteArray(), 0, postingByteStream.size());
-        term.set(prevKey);
-        context.write(term, new PairOfWritables<IntWritable, BytesWritable>(DF, postingList));
-        postingByteStream.reset();
-        df = 0;
+        writeCurrentAndReset(context);
       }
+
+      int docid = key.getRightElement();
+      int docidGap = docid - prevDocId;
+      prevDocId = docid;
 
       Iterator<IntWritable> iter = values.iterator();
       while (iter.hasNext()) {
         df += 1;
-        WritableUtils.writeVInt(postingStream, docid);
+        WritableUtils.writeVInt(postingStream, docidGap);
         WritableUtils.writeVInt(postingStream, iter.next().get());
       }
 
@@ -138,11 +147,7 @@ public class BuildInvertedIndexCompressed extends Configured implements Tool {
     @Override
     public void cleanup(Context context) throws IOException, InterruptedException {
       if (prevKey != null) {
-        DF.set(df);
-        term.set(prevKey);
-        postingByteStream.flush();
-        postingList.set(postingByteStream.toByteArray(), 0, postingByteStream.size());
-        context.write(term, new PairOfWritables<IntWritable, BytesWritable>(DF, postingList));
+        writeCurrentAndReset(context);
       }
     }
   }
