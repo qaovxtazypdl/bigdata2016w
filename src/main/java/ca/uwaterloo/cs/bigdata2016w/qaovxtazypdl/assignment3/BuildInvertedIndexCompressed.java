@@ -33,17 +33,19 @@ import tl.lin.data.fd.Object2IntFrequencyDistribution;
 import tl.lin.data.fd.Object2IntFrequencyDistributionEntry;
 import tl.lin.data.pair.PairOfInts;
 import tl.lin.data.pair.PairOfObjectInt;
+import tl.lin.data.pair.PairOfStringInt;
 import tl.lin.data.pair.PairOfWritables;
 
 public class BuildInvertedIndexCompressed extends Configured implements Tool {
   private static final Logger LOG = Logger.getLogger(BuildInvertedIndexCompressed.class);
 
-  private static class MyMapper extends Mapper<LongWritable, Text, PairOfObjectInt<String>, IntWritable> {
+  private static class MyMapper extends Mapper<LongWritable, Text, PairOfStringInt, IntWritable> {
     private static final Text WORD = new Text();
     private static final IntWritable CNT = new IntWritable();
+    private static final IntWritable DOCNO = new IntWritable();
     private static final Object2IntFrequencyDistribution<String> COUNTS =
         new Object2IntFrequencyDistributionEntry<String>();
-    private static final PairOfObjectInt<String> KEY = new PairOfObjectInt<String>();
+    private static final PairOfStringInt KEY = new PairOfStringInt();
 
     @Override
     public void map(LongWritable docno, Text doc, Context context)
@@ -74,15 +76,15 @@ public class BuildInvertedIndexCompressed extends Configured implements Tool {
     }
   }
 
-  private static class MyPartitioner extends Partitioner<PairOfObjectInt<String>, IntWritable> {
+  private static class MyPartitioner extends Partitioner<PairOfStringInt, IntWritable> {
     @Override
-    public int getPartition(PairOfObjectInt<String> key, IntWritable value, int numReduceTasks) {
+    public int getPartition(PairOfStringInt key, IntWritable value, int numReduceTasks) {
       return (key.getLeftElement().hashCode() & Integer.MAX_VALUE) % numReduceTasks;
     }
   }
 
   private static class MyReducer extends
-      Reducer<PairOfObjectInt<String>, IntWritable, Text, PairOfWritables<IntWritable, ArrayListWritable<PairOfInts>>> {
+      Reducer<PairOfStringInt, IntWritable, Text, PairOfWritables<IntWritable, ArrayListWritable<PairOfInts>>> {
     private final static Text term = new Text();
     private final static IntWritable DF = new IntWritable();
     private final static ArrayListWritable<PairOfInts> postingList = new ArrayListWritable<PairOfInts>();
@@ -90,13 +92,13 @@ public class BuildInvertedIndexCompressed extends Configured implements Tool {
     private static int df = 0;
 
     @Override
-    public void reduce(PairOfObjectInt<String> key, Iterable<IntWritable> values, Context context)
+    public void reduce(PairOfStringInt key, Iterable<IntWritable> values, Context context)
         throws IOException, InterruptedException {
       // key is term,docid    values are counts
       // output key, <sizeoflist, listof(docid, count)>
       String termString = key.getLeftElement();
       int docid = key.getRightElement();
-      if (!prevKey.equals(term) && prevKey != null) {
+      if (prevKey != null && !prevKey.equals(term)) {
         //emit previous, reset
         DF.set(postingList.size());
         term.set(termString);
@@ -114,9 +116,11 @@ public class BuildInvertedIndexCompressed extends Configured implements Tool {
 
     @Override
     public void cleanup(Context context) throws IOException, InterruptedException {
-      DF.set(postingList.size());
-      term.set(prevKey);
-      context.write(term, new PairOfWritables<IntWritable, ArrayListWritable<PairOfInts>>(DF, postingList));
+      if (prevKey != null) {
+        DF.set(postingList.size());
+        term.set(prevKey);
+        context.write(term, new PairOfWritables<IntWritable, ArrayListWritable<PairOfInts>>(DF, postingList));
+      }
     }
   }
 
@@ -162,13 +166,14 @@ public class BuildInvertedIndexCompressed extends Configured implements Tool {
     FileInputFormat.setInputPaths(job, new Path(args.input));
     FileOutputFormat.setOutputPath(job, new Path(args.output));
 
-    job.setMapOutputKeyClass(PairOfObjectInt.class);
+    job.setMapOutputKeyClass(PairOfStringInt.class);
     job.setMapOutputValueClass(IntWritable.class);
     job.setOutputKeyClass(Text.class);
     job.setOutputValueClass(PairOfWritables.class);
     job.setOutputFormatClass(MapFileOutputFormat.class);
 
     job.setMapperClass(MyMapper.class);
+    job.setPartitionerClass(MyPartitioner.class);
     job.setReducerClass(MyReducer.class);
 
     // Delete the output directory if it exists already.
