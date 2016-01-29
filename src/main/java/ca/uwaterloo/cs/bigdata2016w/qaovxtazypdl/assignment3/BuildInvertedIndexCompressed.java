@@ -133,6 +133,7 @@ public class BuildInvertedIndexCompressed extends Configured implements Tool {
       int docid = key.getRightElement();
       int docidGap = docid - prevDocId;
       prevDocId = docid;
+      prevKey = termString;
 
       Iterator<IntWritable> iter = values.iterator();
       while (iter.hasNext()) {
@@ -141,7 +142,6 @@ public class BuildInvertedIndexCompressed extends Configured implements Tool {
         WritableUtils.writeVInt(postingStream, iter.next().get());
       }
 
-      prevKey = termString;
     }
 
     @Override
