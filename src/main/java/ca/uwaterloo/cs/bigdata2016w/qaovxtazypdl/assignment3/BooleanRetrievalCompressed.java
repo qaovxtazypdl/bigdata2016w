@@ -3,6 +3,8 @@ package ca.uwaterloo.cs.bigdata2016w.qaovxtazypdl.assignment3;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.util.Set;
 import java.util.Stack;
 import java.util.ArrayList;
@@ -15,6 +17,10 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.VIntWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.WritableUtils;
 import org.apache.hadoop.io.MapFile;
 import org.apache.hadoop.io.MapFile.Reader;
 import org.apache.hadoop.io.Text;
@@ -110,28 +116,32 @@ public class BooleanRetrievalCompressed extends Configured implements Tool {
   private Set<Integer> fetchDocumentSet(String term) throws IOException {
     Set<Integer> set = new TreeSet<Integer>();
 
-    for (ArrayListWritable<PairOfInts> postings : fetchPostings(term)) {
-      for (PairOfInts pair : postings) {
-        set.add(pair.getLeftElement());
+    for (PairOfWritables<IntWritable, BytesWritable> postings : fetchPostings(term)) {
+      int count = postings.getLeftElement().get();
+      ByteArrayInputStream postingByteStream = new ByteArrayInputStream(postings.getRightElement().getBytes());
+      DataInputStream postingStream = new DataInputStream(postingByteStream);
+
+      for (int i = 0; i < count; i++) {
+        int docid = WritableUtils.readVInt(postingStream);
+        int ct = WritableUtils.readVInt(postingStream);
+        set.add(docid);
       }
     }
 
     return set;
   }
 
-  private ArrayList<ArrayListWritable<PairOfInts>> fetchPostings(String term) throws IOException {
+  private ArrayList<PairOfWritables<IntWritable, BytesWritable>> fetchPostings(String term) throws IOException {
     Text key = new Text();
-    PairOfWritables<IntWritable, ArrayListWritable<PairOfInts>> value =
-        new PairOfWritables<IntWritable, ArrayListWritable<PairOfInts>>();
-
-    ArrayList<ArrayListWritable<PairOfInts>> result = new ArrayList<ArrayListWritable<PairOfInts>>();
+    PairOfWritables<IntWritable, BytesWritable> value = new PairOfWritables<IntWritable, BytesWritable>();
+    ArrayList<PairOfWritables<IntWritable, BytesWritable>> result = new ArrayList<PairOfWritables<IntWritable, BytesWritable>>();
 
     key.set(term);
 
     for (MapFile.Reader indexReader : index) {
       indexReader.get(key, value);
       if (value.getRightElement() != null) {
-        result.add(value.getRightElement());
+        result.add(value);
       }
     }
 
