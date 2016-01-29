@@ -5,15 +5,18 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Set;
 import java.util.Stack;
+import java.util.ArrayList;
 import java.util.TreeSet;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.MapFile;
+import org.apache.hadoop.io.MapFile.Reader;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
@@ -27,16 +30,24 @@ import tl.lin.data.pair.PairOfInts;
 import tl.lin.data.pair.PairOfWritables;
 
 public class BooleanRetrievalCompressed extends Configured implements Tool {
-  private MapFile.Reader index;
+  private ArrayList<MapFile.Reader> index;
   private FSDataInputStream collection;
   private Stack<Set<Integer>> stack;
 
   private BooleanRetrievalCompressed() {}
 
   private void initialize(String indexPath, String collectionPath, FileSystem fs) throws IOException {
-    index = new MapFile.Reader(new Path(indexPath + "/part-r-00000"), fs.getConf());
     collection = fs.open(new Path(collectionPath));
     stack = new Stack<Set<Integer>>();
+    index = new ArrayList<MapFile.Reader>();
+
+    Path indexBasePath = new Path(indexPath);
+    FileStatus[] status = fs.listStatus(indexBasePath);
+
+    for (int i = 0; i < status.length; i++) {
+      if (!status[i].getPath().toString().contains("part-") || status[i].getPath().toString().contains(".crc")) continue;
+      index.add(new MapFile.Reader(new Path(status[i].getPath().toString()), fs.getConf()));
+    }
   }
 
   private void runQuery(String q) throws IOException {
@@ -99,22 +110,32 @@ public class BooleanRetrievalCompressed extends Configured implements Tool {
   private Set<Integer> fetchDocumentSet(String term) throws IOException {
     Set<Integer> set = new TreeSet<Integer>();
 
-    for (PairOfInts pair : fetchPostings(term)) {
-      set.add(pair.getLeftElement());
+    for (ArrayListWritable<PairOfInts> postings : fetchPostings(term)) {
+      for (PairOfInts pair : postings) {
+        set.add(pair.getLeftElement());
+      }
     }
 
     return set;
   }
 
-  private ArrayListWritable<PairOfInts> fetchPostings(String term) throws IOException {
+  private ArrayList<ArrayListWritable<PairOfInts>> fetchPostings(String term) throws IOException {
     Text key = new Text();
     PairOfWritables<IntWritable, ArrayListWritable<PairOfInts>> value =
         new PairOfWritables<IntWritable, ArrayListWritable<PairOfInts>>();
 
-    key.set(term);
-    index.get(key, value);
+    ArrayList<ArrayListWritable<PairOfInts>> result = new ArrayList<ArrayListWritable<PairOfInts>>();
 
-    return value.getRightElement();
+    key.set(term);
+
+    for (MapFile.Reader indexReader : index) {
+      indexReader.get(key, value);
+      if (value.getRightElement() != null) {
+        result.add(value.getRightElement());
+      }
+    }
+
+    return result;
   }
 
   public String fetchLine(long offset) throws IOException {
