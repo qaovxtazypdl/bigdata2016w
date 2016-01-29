@@ -15,6 +15,7 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -37,10 +38,12 @@ import tl.lin.data.pair.PairOfWritables;
 public class BuildInvertedIndexCompressed extends Configured implements Tool {
   private static final Logger LOG = Logger.getLogger(BuildInvertedIndexCompressed.class);
 
-  private static class MyMapper extends Mapper<LongWritable, Text, Text, PairOfInts> {
+  private static class MyMapper extends Mapper<LongWritable, Text, PairOfObjectInt<String>, IntWritable> {
     private static final Text WORD = new Text();
+    private static final IntWritable CNT = new IntWritable();
     private static final Object2IntFrequencyDistribution<String> COUNTS =
         new Object2IntFrequencyDistributionEntry<String>();
+    private static final PairOfObjectInt<String> KEY = new PairOfObjectInt<String>();
 
     @Override
     public void map(LongWritable docno, Text doc, Context context)
@@ -64,34 +67,56 @@ public class BuildInvertedIndexCompressed extends Configured implements Tool {
 
       // Emit postings.
       for (PairOfObjectInt<String> e : COUNTS) {
-        WORD.set(e.getLeftElement());
-        context.write(WORD, new PairOfInts((int) docno.get(), e.getRightElement()));
+        KEY.set(e.getLeftElement(), (int) docno.get());
+        CNT.set(e.getRightElement());
+        context.write(KEY, CNT);
       }
     }
   }
 
+  private static class MyPartitioner extends Partitioner<PairOfObjectInt<String>, IntWritable> {
+    @Override
+    public int getPartition(PairOfObjectInt<String> key, IntWritable value, int numReduceTasks) {
+      return (key.getLeftElement().hashCode() & Integer.MAX_VALUE) % numReduceTasks;
+    }
+  }
+
   private static class MyReducer extends
-      Reducer<Text, PairOfInts, Text, PairOfWritables<IntWritable, ArrayListWritable<PairOfInts>>> {
+      Reducer<PairOfObjectInt<String>, IntWritable, Text, PairOfWritables<IntWritable, ArrayListWritable<PairOfInts>>> {
+    private final static Text term = new Text();
     private final static IntWritable DF = new IntWritable();
+    private final static ArrayListWritable<PairOfInts> postingList = new ArrayListWritable<PairOfInts>();
+    private static String prevKey = null;
+    private static int df = 0;
 
     @Override
-    public void reduce(Text key, Iterable<PairOfInts> values, Context context)
+    public void reduce(PairOfObjectInt<String> key, Iterable<IntWritable> values, Context context)
         throws IOException, InterruptedException {
-      Iterator<PairOfInts> iter = values.iterator();
-      ArrayListWritable<PairOfInts> postings = new ArrayListWritable<PairOfInts>();
-
-      int df = 0;
-      while (iter.hasNext()) {
-        postings.add(iter.next().clone());
-        df++;
+      // key is term,docid    values are counts
+      // output key, <sizeoflist, listof(docid, count)>
+      String termString = key.getLeftElement();
+      int docid = key.getRightElement();
+      if (!prevKey.equals(term) && prevKey != null) {
+        //emit previous, reset
+        DF.set(postingList.size());
+        term.set(termString);
+        context.write(term, new PairOfWritables<IntWritable, ArrayListWritable<PairOfInts>>(DF, postingList));
+        postingList.clear();
       }
 
-      // Sort the postings by docno ascending.
-      Collections.sort(postings);
+      Iterator<IntWritable> iter = values.iterator();
+      while (iter.hasNext()) {
+        postingList.add(new PairOfInts(docid, iter.next().get()));
+      }
 
-      DF.set(df);
-      context.write(key,
-          new PairOfWritables<IntWritable, ArrayListWritable<PairOfInts>>(DF, postings));
+      prevKey = termString;
+    }
+
+    @Override
+    public void cleanup(Context context) throws IOException, InterruptedException {
+      DF.set(postingList.size());
+      term.set(prevKey);
+      context.write(term, new PairOfWritables<IntWritable, ArrayListWritable<PairOfInts>>(DF, postingList));
     }
   }
 
@@ -132,14 +157,13 @@ public class BuildInvertedIndexCompressed extends Configured implements Tool {
     job.setJobName(BuildInvertedIndexCompressed.class.getSimpleName());
     job.setJarByClass(BuildInvertedIndexCompressed.class);
 
-    System.out.println("@@@@@@@@@@@@@@@@@@@@@@" + args.numReducers);
     job.setNumReduceTasks(args.numReducers);
 
     FileInputFormat.setInputPaths(job, new Path(args.input));
     FileOutputFormat.setOutputPath(job, new Path(args.output));
 
-    job.setMapOutputKeyClass(Text.class);
-    job.setMapOutputValueClass(PairOfInts.class);
+    job.setMapOutputKeyClass(PairOfObjectInt.class);
+    job.setMapOutputValueClass(IntWritable.class);
     job.setOutputKeyClass(Text.class);
     job.setOutputValueClass(PairOfWritables.class);
     job.setOutputFormatClass(MapFileOutputFormat.class);
