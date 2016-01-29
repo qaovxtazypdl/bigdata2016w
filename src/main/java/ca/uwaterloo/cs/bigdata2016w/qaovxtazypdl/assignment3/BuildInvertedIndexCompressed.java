@@ -1,6 +1,8 @@
 package ca.uwaterloo.cs.bigdata2016w.qaovxtazypdl.assignment3;
 
 import java.io.IOException;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -11,7 +13,10 @@ import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.VIntWritable;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.WritableUtils;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -84,17 +89,22 @@ public class BuildInvertedIndexCompressed extends Configured implements Tool {
   }
 
   private static class MyReducer extends
-      Reducer<PairOfStringInt, IntWritable, Text, PairOfWritables<IntWritable, ArrayListWritable<PairOfInts>>> {
+      Reducer<PairOfStringInt, IntWritable, Text, PairOfWritables<IntWritable, BytesWritable>> {
     private final static Text term = new Text();
     private final static IntWritable DF = new IntWritable();
-    private final static ArrayListWritable<PairOfInts> postingList = new ArrayListWritable<PairOfInts>();
+    private final static VIntWritable vint = new VIntWritable();
+    private final static BytesWritable postingList = new BytesWritable();
+    private final static ByteArrayOutputStream postingByteStream = new ByteArrayOutputStream();
+    private final static DataOutputStream postingStream = new DataOutputStream(postingByteStream);
+
     private static String prevKey = null;
     private static int df = 0;
 
     @Override
     public void setup(Context context) throws IOException, InterruptedException {
       prevKey = null;
-      postingList.clear();
+      postingByteStream.reset();
+      df = 0;
     }
 
     @Override
@@ -106,15 +116,20 @@ public class BuildInvertedIndexCompressed extends Configured implements Tool {
       int docid = key.getRightElement();
       if (prevKey != null && !prevKey.equals(termString)) {
         //emit previous, reset
-        DF.set(postingList.size());
+        DF.set(df);
+        postingByteStream.flush();
+        postingList.set(postingByteStream.toByteArray(), 0, postingByteStream.size());
         term.set(prevKey);
-        context.write(term, new PairOfWritables<IntWritable, ArrayListWritable<PairOfInts>>(DF, postingList));
-        postingList.clear();
+        context.write(term, new PairOfWritables<IntWritable, BytesWritable>(DF, postingList));
+        postingByteStream.reset();
+        df = 0;
       }
 
       Iterator<IntWritable> iter = values.iterator();
       while (iter.hasNext()) {
-        postingList.add(new PairOfInts(docid, iter.next().get()));
+        df += 1;
+        WritableUtils.writeVInt(postingStream, docid);
+        WritableUtils.writeVInt(postingStream, iter.next().get());
       }
 
       prevKey = termString;
@@ -123,9 +138,11 @@ public class BuildInvertedIndexCompressed extends Configured implements Tool {
     @Override
     public void cleanup(Context context) throws IOException, InterruptedException {
       if (prevKey != null) {
-        DF.set(postingList.size());
+        DF.set(df);
         term.set(prevKey);
-        context.write(term, new PairOfWritables<IntWritable, ArrayListWritable<PairOfInts>>(DF, postingList));
+        postingByteStream.flush();
+        postingList.set(postingByteStream.toByteArray(), 0, postingByteStream.size());
+        context.write(term, new PairOfWritables<IntWritable, BytesWritable>(DF, postingList));
       }
     }
   }
