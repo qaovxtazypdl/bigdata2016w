@@ -2,6 +2,7 @@ package ca.uwaterloo.cs.bigdata2016w.qaovxtazypdl.assignment4;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.ArrayList;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -41,25 +42,27 @@ import tl.lin.data.array.ArrayListOfIntsWritable;
 public class BuildPersonalizedPageRankRecords extends Configured implements Tool {
   private static final Logger LOG = Logger.getLogger(BuildPersonalizedPageRankRecords.class);
 
-  private static final String NODE_CNT_FIELD = "node.cnt";
+  private static final String SOURCES_FIELD = "node.srcs";
 
   private static class MyMapper extends Mapper<LongWritable, Text, IntWritable, PageRankNode> {
     private static final IntWritable nid = new IntWritable();
     private static final PageRankNode node = new PageRankNode();
+    private ArrayList<Long> sources = new ArrayList<Long>();
 
-    @Override
     public void setup(Mapper<LongWritable, Text, IntWritable, PageRankNode>.Context context) {
-      int n = context.getConfiguration().getInt(NODE_CNT_FIELD, 0);
-      if (n == 0) {
-        throw new RuntimeException(NODE_CNT_FIELD + " cannot be 0!");
+      String srcStrings[] = context.getConfiguration().getStrings(SOURCES_FIELD);
+      for (int i = 0; i < srcStrings.length; i++) {
+        sources.add(Long.parseLong(srcStrings[i]));
       }
       node.setType(PageRankNode.Type.Complete);
-      node.setPageRank((float) -StrictMath.log(n));
     }
 
     @Override
     public void map(LongWritable key, Text t, Context context) throws IOException,
         InterruptedException {
+
+      node.setPageRank((float) -StrictMath.log(key.get() == sources.get(0)?1:0));
+
       String[] arr = t.toString().trim().split("\\s+");
 
       nid.set(Integer.parseInt(arr[0]));
@@ -143,7 +146,7 @@ public class BuildPersonalizedPageRankRecords extends Configured implements Tool
     LOG.info(" - numNodes: " + n);
 
     Configuration conf = getConf();
-    conf.setInt(NODE_CNT_FIELD, n);
+    conf.setStrings(SOURCES_FIELD, sources);
     conf.setInt("mapred.min.split.size", 1024 * 1024 * 1024);
 
     Job job = Job.getInstance(conf);
