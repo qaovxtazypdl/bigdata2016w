@@ -2,6 +2,7 @@ package ca.uwaterloo.cs.bigdata2016w.qaovxtazypdl.assignment4;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Iterator;
 
 import org.apache.commons.cli.CommandLine;
@@ -77,11 +78,17 @@ public class ExtractTopPersonalizedPageRankNodes extends Configured implements T
   private static class MyReducer extends
       Reducer<IntWritable, PairOfIntFloat, IntWritable, FloatWritable> {
     private TopScoredObjects<Integer>[] queues;
+    private ArrayList<Long> sources = new ArrayList<Long>();
 
     @Override
     public void setup(Context context) throws IOException {
-      int k = context.getConfiguration().getInt("n", 100);
       int srcCount = context.getConfiguration().getInt("srcCount", 1);
+      String srcStrings[] = context.getConfiguration().getStrings("sources");
+      for (int i = 0; i < srcCount; i++) {
+        sources.add(Long.parseLong(srcStrings[i]));
+      }
+
+      int k = context.getConfiguration().getInt("n", 100);
       queues = new TopScoredObjects[srcCount];
       for (int i = 0; i < srcCount; i++) {
         queues[i] = new TopScoredObjects<Integer>(k);
@@ -106,10 +113,15 @@ public class ExtractTopPersonalizedPageRankNodes extends Configured implements T
       int srcCount = context.getConfiguration().getInt("srcCount", 1);
 
       for (int i = 0; i < srcCount; i++) {
+        System.out.println("Source: " + sources.get(i));
         for (PairOfObjectFloat<Integer> pair : queues[i].extractAll()) {
           key.set(pair.getLeftElement());
           value.set(pair.getRightElement());
           context.write(key, value);
+          System.out.printf("%.5f %d\n", (float) StrictMath.exp(pair.getRightElement()), pair.getLeftElement());
+        }
+        if (i < srcCount - 1) {
+          System.out.println();
         }
       }
     }
@@ -170,10 +182,13 @@ public class ExtractTopPersonalizedPageRankNodes extends Configured implements T
     LOG.info(" - top: " + n);
     LOG.info(" - sources: " + sources);
 
+
+
     Configuration conf = getConf();
     conf.setInt("mapred.min.split.size", 1024 * 1024 * 1024);
     conf.setInt("n", n);
     conf.setInt("srcCount", srcCount);
+    conf.setStrings("sources", sources);
 
     Job job = Job.getInstance(conf);
     job.setJobName(ExtractTopPersonalizedPageRankNodes.class.getName() + ":" + inputPath);
