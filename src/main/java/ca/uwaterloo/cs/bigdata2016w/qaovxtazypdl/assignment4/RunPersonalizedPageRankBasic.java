@@ -335,7 +335,7 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
         System.out.println("link:" + link);
         System.out.println("alpha:" + (float) Math.log(ALPHA));
         System.out.println("complement:" + (float) Math.log(1.0f - ALPHA));
-        System.out.println("summed:" + sumLogProbs(p, (float) Math.log(missingMass[i]));
+        System.out.println("summed:" + sumLogProbs(p, (float) Math.log(missingMass[i])));
         System.out.println("plu:" + missingMass[i]);
         System.out.println("after:" + p);
         node.setPageRank(i, p);
