@@ -54,9 +54,10 @@ public class ExtractTopPersonalizedPageRankNodes extends Configured implements T
     public void map(IntWritable nid, MultiSourcePageRankNode node, Context context) throws IOException,
         InterruptedException {
       int srcCount = context.getConfiguration().getInt("srcCount", 1);
+      System.out.println("@@@@@@@@");
       for (int i = 0; i < srcCount; i++) {
         queues[i].add(node.getNodeId(), node.getPageRank(i));
-        System.out.println(node.getPageRank(i));
+        System.out.println("@@@@@@@@" + node.getPageRank(i));
       }
     }
 
