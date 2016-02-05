@@ -113,10 +113,10 @@ public class PartitionGraph extends Configured implements Tool {
     job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
     job.setMapOutputKeyClass(IntWritable.class);
-    job.setMapOutputValueClass(PageRankNode.class);
+    job.setMapOutputValueClass(MultiSourcePageRankNode.class);
 
     job.setOutputKeyClass(IntWritable.class);
-    job.setOutputValueClass(PageRankNode.class);
+    job.setOutputValueClass(MultiSourcePageRankNode.class);
 
     if (useRange) {
       job.setPartitionerClass(RangePartitioner.class);

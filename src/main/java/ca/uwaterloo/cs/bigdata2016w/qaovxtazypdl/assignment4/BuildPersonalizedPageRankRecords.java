@@ -44,24 +44,25 @@ public class BuildPersonalizedPageRankRecords extends Configured implements Tool
 
   private static final String SOURCES_FIELD = "node.srcs";
 
-  private static class MyMapper extends Mapper<LongWritable, Text, IntWritable, PageRankNode> {
+  private static class MyMapper extends Mapper<LongWritable, Text, IntWritable, MultiSourcePageRankNode> {
     private static final IntWritable nid = new IntWritable();
-    private static final PageRankNode node = new PageRankNode();
+    private static final MultiSourcePageRankNode node = new MultiSourcePageRankNode();
     private ArrayList<Long> sources = new ArrayList<Long>();
 
-    public void setup(Mapper<LongWritable, Text, IntWritable, PageRankNode>.Context context) {
+    public void setup(Mapper<LongWritable, Text, IntWritable, MultiSourcePageRankNode>.Context context) {
       String srcStrings[] = context.getConfiguration().getStrings(SOURCES_FIELD);
       for (int i = 0; i < srcStrings.length; i++) {
         sources.add(Long.parseLong(srcStrings[i]));
       }
-      node.setType(PageRankNode.Type.Complete);
+      node.setType(MultiSourcePageRankNode.Type.Complete);
+      node.setNumSourcesAndClear(srcStrings.length);
     }
 
     @Override
     public void map(LongWritable key, Text t, Context context) throws IOException,
         InterruptedException {
 
-      node.setPageRank((float) StrictMath.log(key.get() == sources.get(0)?1:0));
+      node.setPageRank(0, (float) StrictMath.log(key.get() == sources.get(0)?1:0));
 
       String[] arr = t.toString().trim().split("\\s+");
 
@@ -162,10 +163,10 @@ public class BuildPersonalizedPageRankRecords extends Configured implements Tool
     job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
     job.setMapOutputKeyClass(IntWritable.class);
-    job.setMapOutputValueClass(PageRankNode.class);
+    job.setMapOutputValueClass(MultiSourcePageRankNode.class);
 
     job.setOutputKeyClass(IntWritable.class);
-    job.setOutputValueClass(PageRankNode.class);
+    job.setOutputValueClass(MultiSourcePageRankNode.class);
 
     job.setMapperClass(MyMapper.class);
 
