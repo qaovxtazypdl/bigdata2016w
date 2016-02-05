@@ -56,6 +56,7 @@ public class ExtractTopPersonalizedPageRankNodes extends Configured implements T
       int srcCount = context.getConfiguration().getInt("srcCount", 1);
       for (int i = 0; i < srcCount; i++) {
         queues[i].add(node.getNodeId(), node.getPageRank(i));
+        System.out.println(node.getPageRank(i));
       }
     }
 
