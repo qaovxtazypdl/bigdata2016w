@@ -5,6 +5,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.ArrayList;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -239,6 +240,7 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
       Mapper<IntWritable, PageRankNode, IntWritable, PageRankNode> {
     private float missingMass = 0.0f;
     private int nodeCnt = 0;
+    private ArrayList<Long> sources = new ArrayList<Long>();
 
     @Override
     public void setup(Context context) throws IOException {
@@ -246,6 +248,11 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
 
       missingMass = conf.getFloat("MissingMass", 0.0f);
       nodeCnt = conf.getInt("NodeCount", 0);
+
+      String srcStrings[] = conf.getStrings(SOURCES_FIELD);
+      for (int i = 0; i < srcStrings.length; i++) {
+        sources.add(Long.parseLong(srcStrings[i]));
+      }
     }
 
     @Override
@@ -253,7 +260,7 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
         throws IOException, InterruptedException {
       float p = node.getPageRank();
       float jump, link;
-      if (nid.get() == source) {
+      if (nid.get() == sources.get(0)) {
         jump = (float) Math.log(ALPHA);
         link = (float) Math.log(1.0f - ALPHA) + sumLogProbs(p, (float) Math.log(missingMass));
       } else {
@@ -263,6 +270,8 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
 
       p = sumLogProbs(jump, link);
       node.setPageRank(p);
+
+      System.out.println(p);
 
       context.write(nid, node);
     }
@@ -347,7 +356,7 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
     LOG.info(" - user range partitioner: " + useRange);
     LOG.info(" - sources: " + sources);
 
-    conf.setStrings(SOURCES_FIELD, sources);
+    getConf().setStrings(SOURCES_FIELD, sources);
 
     // Iterate PageRank.
     for (int i = s; i < e; i++) {
