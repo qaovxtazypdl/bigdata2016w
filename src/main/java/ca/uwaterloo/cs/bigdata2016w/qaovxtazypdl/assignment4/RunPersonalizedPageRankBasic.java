@@ -103,8 +103,8 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
       // Distribute PageRank mass to neighbors (along outgoing edges).
       if (node.getAdjacenyList().size() > 0) {
         // Each neighbor gets an equal share of PageRank mass.
-        float massDiff = (float) StrictMath.log(list.size());
         ArrayListOfIntsWritable list = node.getAdjacenyList();
+        float massDiff = (float) StrictMath.log(list.size());
 
         context.getCounter(PageRank.edges).increment(list.size());
 
@@ -113,8 +113,8 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
           neighbor.set(list.get(i));
           intermediateMass.setNodeId(list.get(i));
           intermediateMass.setType(MultiSourcePageRankNode.Type.Mass);
-          for (int i = 0; i < srcCount; i++) {
-            intermediateMass.setPageRank(i, node.getPageRank(i) - massDiff);
+          for (int j = 0; j < srcCount; j++) {
+            intermediateMass.setPageRank(j, node.getPageRank(j) - massDiff);
           }
 
           // Emit messages with PageRank mass to neighbors.
@@ -147,7 +147,7 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
       int srcCount = context.getConfiguration().getInt(SOURCES_COUNT_FIELD, 1);
 
       // Remember, PageRank mass is stored as a log prob.
-      float mass[srcCount] = new Float[srcCount];
+      float[] mass = new float[srcCount];
       for (int i = 0; i < srcCount; i++) {
          mass[i] = Float.NEGATIVE_INFINITY;
       }
@@ -182,7 +182,16 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
       Reducer<IntWritable, MultiSourcePageRankNode, IntWritable, MultiSourcePageRankNode> {
     // For keeping track of PageRank mass encountered, so we can compute missing PageRank mass lost
     // through dangling nodes.
-    private float totalMass = Float.NEGATIVE_INFINITY;
+    private float[] totalMass;
+
+    @Override
+    public void setup(Context context) throws IOException, InterruptedException {
+      int srcCount = context.getConfiguration().getInt(SOURCES_COUNT_FIELD, 1);
+      totalMass = new float[srcCount];
+      for (int i = 0; i < srcCount; i++) {
+         totalMass[i] = Float.NEGATIVE_INFINITY;
+      }
+    }
 
     @Override
     public void reduce(IntWritable nid, Iterable<MultiSourcePageRankNode> iterable, Context context)
@@ -200,7 +209,7 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
       int massMessagesReceived = 0;
       int structureReceived = 0;
 
-      float mass[srcCount] = new Float[srcCount];
+      float[] mass = new float[srcCount];
       for (int i = 0; i < srcCount; i++) {
          mass[i] = Float.NEGATIVE_INFINITY;
       }
@@ -235,7 +244,9 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
         context.write(nid, node);
 
         // Keep track of total PageRank mass.
-        totalMass = sumLogProbs(totalMass, mass);
+        for (int i = 0; i < srcCount; i++) {
+          totalMass[i] = sumLogProbs(totalMass[i], mass[i]);
+        }
       } else if (structureReceived == 0) {
         // We get into this situation if there exists an edge pointing to a node which has no
         // corresponding node structure (i.e., PageRank mass was passed to a non-existent node)...
@@ -257,6 +268,7 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
       Configuration conf = context.getConfiguration();
       String taskId = conf.get("mapred.task.id");
       String path = conf.get("PageRankMassPath");
+      int srcCount = context.getConfiguration().getInt(SOURCES_COUNT_FIELD, 1);
 
       Preconditions.checkNotNull(taskId);
       Preconditions.checkNotNull(path);
@@ -264,7 +276,9 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
       // Write to a file the amount of PageRank mass we've seen in this reducer.
       FileSystem fs = FileSystem.get(context.getConfiguration());
       FSDataOutputStream out = fs.create(new Path(path + "/" + taskId), false);
-      out.writeFloat(totalMass);
+      for (int i = 0; i < srcCount; i++) {
+        out.writeFloat(totalMass[i]);
+      }
       out.close();
     }
   }
@@ -273,7 +287,7 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
   // of the random jump factor.
   private static class MapPageRankMassDistributionClass extends
       Mapper<IntWritable, MultiSourcePageRankNode, IntWritable, MultiSourcePageRankNode> {
-    private float missingMass = 0.0f;
+    private float[] missingMass;
     private int nodeCnt = 0;
     private ArrayList<Long> sources = new ArrayList<Long>();
 
@@ -281,12 +295,19 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
     public void setup(Context context) throws IOException {
       Configuration conf = context.getConfiguration();
 
-      missingMass = conf.getFloat("MissingMass", 0.0f);
+      int srcCount = conf.getInt(SOURCES_COUNT_FIELD, 1);
       nodeCnt = conf.getInt("NodeCount", 0);
 
       String srcStrings[] = conf.getStrings(SOURCES_FIELD);
-      for (int i = 0; i < srcStrings.length; i++) {
+      for (int i = 0; i < srcCount; i++) {
         sources.add(Long.parseLong(srcStrings[i]));
+      }
+
+      String[] missingMassStrings = conf.getStrings("MissingMass");
+
+      missingMass = new float[srcCount];
+      for (int i = 0; i < srcCount; i++) {
+        missingMass[i] = Float.parseFloat(missingMassStrings[i]);
       }
     }
 
@@ -300,7 +321,7 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
         float jump, link;
         if (nid.get() == sources.get(i)) {
           jump = (float) Math.log(ALPHA);
-          link = (float) Math.log(1.0f - ALPHA) + sumLogProbs(p, (float) Math.log(missingMass));
+          link = (float) Math.log(1.0f - ALPHA) + sumLogProbs(p, (float) Math.log(missingMass[i]));
         } else {
           jump = (float) Math.log(0);
           link = (float) Math.log(1.0f - ALPHA) + p;
@@ -408,19 +429,22 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
   private void iteratePageRank(int i, int j, String basePath, int numNodes,
       boolean useCombiner) throws Exception {
     // Each iteration consists of two phases (two MapReduce jobs).
+    int srcCount = getConf().getInt(SOURCES_COUNT_FIELD, 1);
 
     // Job 1: distribute PageRank mass along outgoing edges.
-    float mass = phase1(i, j, basePath, numNodes, useCombiner);
+    float[] mass = phase1(i, j, basePath, numNodes, useCombiner);
 
     // Find out how much PageRank mass got lost at the dangling nodes.
-    float missing = 1.0f - (float) StrictMath.exp(mass);
+    float[] missing = new float[srcCount];
+    for (int k = 0; k < srcCount; k++) {
+      missing[k] = 1.0f - (float) StrictMath.exp(mass[k]);
+    }
 
     // Job 2: distribute missing mass, take care of random jump factor.
     phase2(i, j, missing, basePath, numNodes);
   }
 
-  private float phase1(int i, int j, String basePath, int numNodes,
-      boolean useCombiner) throws Exception {
+  private float[] phase1(int i, int j, String basePath, int numNodes, boolean useCombiner) throws Exception {
     Job job = Job.getInstance(getConf());
     job.setJobName("PageRank:Basic:iteration" + j + ":Phase1");
     job.setJarByClass(RunPersonalizedPageRankBasic.class);
@@ -481,23 +505,34 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
     job.waitForCompletion(true);
     System.out.println("Job Finished in " + (System.currentTimeMillis() - startTime) / 1000.0 + " seconds");
 
-    float mass = Float.NEGATIVE_INFINITY;
+    int srcCount = job.getConfiguration().getInt(SOURCES_COUNT_FIELD, 1);
+    float[] mass = new float[srcCount];
+    for (int k = 0; k < srcCount; k++) {
+      mass[k] = Float.NEGATIVE_INFINITY;
+    }
+
     FileSystem fs = FileSystem.get(getConf());
     for (FileStatus f : fs.listStatus(new Path(outm))) {
       FSDataInputStream fin = fs.open(f.getPath());
-      mass = sumLogProbs(mass, fin.readFloat());
+      for (int k = 0; k < srcCount; k++) {
+        mass[k] = sumLogProbs(mass[k], fin.readFloat());
+      }
       fin.close();
     }
 
     return mass;
   }
 
-  private void phase2(int i, int j, float missing, String basePath, int numNodes) throws Exception {
+  private void phase2(int i, int j, float[] missing, String basePath, int numNodes) throws Exception {
     Job job = Job.getInstance(getConf());
     job.setJobName("PageRank:Basic:iteration" + j + ":Phase2");
     job.setJarByClass(RunPersonalizedPageRankBasic.class);
 
-    LOG.info("missing PageRank mass: " + missing);
+    int srcCount = job.getConfiguration().getInt(SOURCES_COUNT_FIELD, 1);
+
+    for (int k = 0; k < srcCount; k++) {
+      LOG.info("missing PageRank mass: " + missing[k]);
+    }
     LOG.info("number of nodes: " + numNodes);
 
     String in = basePath + "/iter" + formatter.format(j) + "t";
@@ -509,8 +544,16 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
 
     job.getConfiguration().setBoolean("mapred.map.tasks.speculative.execution", false);
     job.getConfiguration().setBoolean("mapred.reduce.tasks.speculative.execution", false);
-    job.getConfiguration().setFloat("MissingMass", (float) missing);
     job.getConfiguration().setInt("NodeCount", numNodes);
+
+    String missingMassString = "";
+    for (int k = 0; k < srcCount; k++) {
+      missingMassString += Float.toString(missing[k]);
+      if (k < srcCount - 1) {
+        missingMassString += ",";
+      }
+    }
+    job.getConfiguration().setStrings("MissingMass", missingMassString);
 
     job.setNumReduceTasks(0);
 
