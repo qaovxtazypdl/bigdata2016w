@@ -319,8 +319,6 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
       for (int i = 0; i < srcCount; i++) {
         float p = node.getPageRank(i);
         float jump, link;
-        if (nid.get() == 73276)
-          System.out.println("before:" + p);
         if (nid.get() == sources.get(i)) {
           jump = (float) Math.log(ALPHA);
           link = (float) Math.log(1.0f - ALPHA) + sumLogProbs(p, (float) Math.log(missingMass[i]));
@@ -330,15 +328,6 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
         }
 
         p = sumLogProbs(jump, link);
-        if (nid.get() == 73276) {
-          System.out.println("jump:" + jump);
-          System.out.println("link:" + link);
-          System.out.println("alpha:" + (float) Math.log(ALPHA));
-          System.out.println("complement:" + (float) Math.log(1.0f - ALPHA));
-          System.out.println("summed:" + sumLogProbs(p, (float) Math.log(missingMass[i])));
-          System.out.println("plu:" + missingMass[i]);
-          System.out.println("after:" + p);
-        }
         node.setPageRank(i, p);
       }
 
@@ -528,6 +517,10 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
       for (int k = 0; k < srcCount; k++) {
         mass[k] = sumLogProbs(mass[k], fin.readFloat());
       }
+      if (mass[k] > 0) System.out.println("???????????????????WHAT???????????????????");
+      if (mass[k] > 0) System.out.println("???????????????????WHAT???????????????????");
+      if (mass[k] > 0) System.out.println("???????????????????WHAT???????????????????");
+      if (mass[k] > 0) System.out.println("???????????????????WHAT???????????????????");
       fin.close();
     }
 
