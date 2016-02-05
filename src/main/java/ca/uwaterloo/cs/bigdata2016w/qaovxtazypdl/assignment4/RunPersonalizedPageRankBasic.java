@@ -90,6 +90,7 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
     @Override
     public void map(IntWritable nid, MultiSourcePageRankNode node, Context context)
         throws IOException, InterruptedException {
+      int srcCount = context.getConfiguration().getInt(SOURCES_COUNT_FIELD, 1);
       // Pass along node structure.
       intermediateStructure.setNodeId(node.getNodeId());
       intermediateStructure.setType(MultiSourcePageRankNode.Type.Structure);
@@ -102,8 +103,8 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
       // Distribute PageRank mass to neighbors (along outgoing edges).
       if (node.getAdjacenyList().size() > 0) {
         // Each neighbor gets an equal share of PageRank mass.
+        float massDiff = (float) StrictMath.log(list.size());
         ArrayListOfIntsWritable list = node.getAdjacenyList();
-        float mass = node.getPageRank(0) - (float) StrictMath.log(list.size());
 
         context.getCounter(PageRank.edges).increment(list.size());
 
@@ -112,7 +113,9 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
           neighbor.set(list.get(i));
           intermediateMass.setNodeId(list.get(i));
           intermediateMass.setType(MultiSourcePageRankNode.Type.Mass);
-          intermediateMass.setPageRank(0, mass);
+          for (int i = 0; i < srcCount; i++) {
+            intermediateMass.setPageRank(i, node.getPageRank(i) - massDiff);
+          }
 
           // Emit messages with PageRank mass to neighbors.
           context.write(neighbor, intermediateMass);
@@ -141,16 +144,23 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
     public void reduce(IntWritable nid, Iterable<MultiSourcePageRankNode> values, Context context)
         throws IOException, InterruptedException {
       int massMessages = 0;
+      int srcCount = context.getConfiguration().getInt(SOURCES_COUNT_FIELD, 1);
 
       // Remember, PageRank mass is stored as a log prob.
-      float mass = Float.NEGATIVE_INFINITY;
+      float mass[srcCount] = new Float[srcCount];
+      for (int i = 0; i < srcCount; i++) {
+         mass[i] = Float.NEGATIVE_INFINITY;
+      }
+
       for (MultiSourcePageRankNode n : values) {
         if (n.getType() == MultiSourcePageRankNode.Type.Structure) {
           // Simply pass along node structure.
           context.write(nid, n);
         } else {
           // Accumulate PageRank mass contributions.
-          mass = sumLogProbs(mass, n.getPageRank(0));
+          for (int i = 0; i < srcCount; i++) {
+            mass[i] = sumLogProbs(mass[i], n.getPageRank(i));
+          }
           massMessages++;
         }
       }
@@ -159,8 +169,9 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
       if (massMessages > 0) {
         intermediateMass.setNodeId(nid.get());
         intermediateMass.setType(MultiSourcePageRankNode.Type.Mass);
-        intermediateMass.setPageRank(0, mass);
-
+        for (int i = 0; i < srcCount; i++) {
+          intermediateMass.setPageRank(i, mass[i]);
+        }
         context.write(nid, intermediateMass);
       }
     }
@@ -189,7 +200,11 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
       int massMessagesReceived = 0;
       int structureReceived = 0;
 
-      float mass = Float.NEGATIVE_INFINITY;
+      float mass[srcCount] = new Float[srcCount];
+      for (int i = 0; i < srcCount; i++) {
+         mass[i] = Float.NEGATIVE_INFINITY;
+      }
+
       while (values.hasNext()) {
         MultiSourcePageRankNode n = values.next();
 
@@ -201,13 +216,17 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
           node.setAdjacencyList(list);
         } else {
           // This is a message that contains PageRank mass; accumulate.
-          mass = sumLogProbs(mass, n.getPageRank(0));
+          for (int i = 0; i < srcCount; i++) {
+            mass[i] = sumLogProbs(mass[i], n.getPageRank(i));
+          }
           massMessagesReceived++;
         }
       }
 
       // Update the final accumulated PageRank mass.
-      node.setPageRank(0, mass);
+      for (int i = 0; i < srcCount; i++) {
+        node.setPageRank(i, mass[i]);
+      }
       context.getCounter(PageRank.massMessagesReceived).increment(massMessagesReceived);
 
       // Error checking.
@@ -274,18 +293,22 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
     @Override
     public void map(IntWritable nid, MultiSourcePageRankNode node, Context context)
         throws IOException, InterruptedException {
-      float p = node.getPageRank(0);
-      float jump, link;
-      if (nid.get() == sources.get(0)) {
-        jump = (float) Math.log(ALPHA);
-        link = (float) Math.log(1.0f - ALPHA) + sumLogProbs(p, (float) Math.log(missingMass));
-      } else {
-        jump = (float) Math.log(0);
-        link = (float) Math.log(1.0f - ALPHA) + p;
-      }
+      int srcCount = context.getConfiguration().getInt(SOURCES_COUNT_FIELD, 1);
 
-      p = sumLogProbs(jump, link);
-      node.setPageRank(0, p);
+      for (int i = 0; i < srcCount; i++) {
+        float p = node.getPageRank(i);
+        float jump, link;
+        if (nid.get() == sources.get(i)) {
+          jump = (float) Math.log(ALPHA);
+          link = (float) Math.log(1.0f - ALPHA) + sumLogProbs(p, (float) Math.log(missingMass));
+        } else {
+          jump = (float) Math.log(0);
+          link = (float) Math.log(1.0f - ALPHA) + p;
+        }
+
+        p = sumLogProbs(jump, link);
+        node.setPageRank(i, p);
+      }
 
       context.write(nid, node);
     }

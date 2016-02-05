@@ -62,7 +62,9 @@ public class BuildPersonalizedPageRankRecords extends Configured implements Tool
     public void map(LongWritable key, Text t, Context context) throws IOException,
         InterruptedException {
 
-      node.setPageRank(0, (float) StrictMath.log(key.get() == sources.get(0)?1:0));
+      for (int i = 0; i < sources.size(); i++) {
+        node.setPageRank(i, (float) StrictMath.log(key.get() == sources.get(i)?1:0));
+      }
 
       String[] arr = t.toString().trim().split("\\s+");
 
