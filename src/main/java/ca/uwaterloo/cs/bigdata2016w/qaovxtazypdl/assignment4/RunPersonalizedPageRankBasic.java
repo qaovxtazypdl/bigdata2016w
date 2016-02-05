@@ -59,6 +59,7 @@ import com.google.common.base.Preconditions;
  */
 public class RunPersonalizedPageRankBasic extends Configured implements Tool {
   private static final Logger LOG = Logger.getLogger(RunPersonalizedPageRankBasic.class);
+  private static final String SOURCES_FIELD = "node.srcs";
 
   private static enum PageRank {
     nodes, edges, massMessages, massMessagesSaved, massMessagesReceived, missingStructure
@@ -251,10 +252,14 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
     public void map(IntWritable nid, PageRankNode node, Context context)
         throws IOException, InterruptedException {
       float p = node.getPageRank();
-
-      float jump = (float) (Math.log(ALPHA) - Math.log(nodeCnt));
-      float link = (float) Math.log(1.0f - ALPHA)
-          + sumLogProbs(p, (float) (Math.log(missingMass) - Math.log(nodeCnt)));
+      float jump, link;
+      if (nid.get() == source) {
+        jump = (float) Math.log(ALPHA);
+        link = (float) Math.log(1.0f - ALPHA) + sumLogProbs(p, (float) Math.log(missingMass));
+      } else {
+        jump = (float) Math.log(0);
+        link = (float) Math.log(1.0f - ALPHA) + p;
+      }
 
       p = sumLogProbs(jump, link);
       node.setPageRank(p);
@@ -278,6 +283,7 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
 
   private static final String BASE = "base";
   private static final String NUM_NODES = "numNodes";
+  private static final String SOURCES = "sources";
   private static final String START = "start";
   private static final String END = "end";
   private static final String COMBINER = "useCombiner";
@@ -301,6 +307,8 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
         .withDescription("end iteration").create(END));
     options.addOption(OptionBuilder.withArgName("num").hasArg()
         .withDescription("number of nodes").create(NUM_NODES));
+    options.addOption(OptionBuilder.withArgName("num").hasArg()
+        .withDescription("source nodes").create(SOURCES));
 
     CommandLine cmdline;
     CommandLineParser parser = new GnuParser();
@@ -328,6 +336,7 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
     int e = Integer.parseInt(cmdline.getOptionValue(END));
     boolean useCombiner = cmdline.hasOption(COMBINER);
     boolean useRange = cmdline.hasOption(RANGE);
+    String sources = cmdline.getOptionValue(SOURCES);
 
     LOG.info("Tool name: RunPageRank");
     LOG.info(" - base path: " + basePath);
@@ -336,6 +345,9 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
     LOG.info(" - end iteration: " + e);
     LOG.info(" - use combiner: " + useCombiner);
     LOG.info(" - user range partitioner: " + useRange);
+    LOG.info(" - sources: " + sources);
+
+    conf.setStrings(SOURCES_FIELD, sources);
 
     // Iterate PageRank.
     for (int i = s; i < e; i++) {
