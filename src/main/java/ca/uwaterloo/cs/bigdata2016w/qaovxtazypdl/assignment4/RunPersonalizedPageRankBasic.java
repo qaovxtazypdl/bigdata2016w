@@ -327,6 +327,15 @@ public class RunPersonalizedPageRankBasic extends Configured implements Tool {
           link = (float) Math.log(1.0f - ALPHA) + p;
         }
 
+        if (nid.get() == 73276) {
+          System.out.println("jump" + jump);
+          System.out.println("link" + link);
+          System.out.println("(float) Math.log(1.0f - ALPHA)" + (float) Math.log(1.0f - ALPHA));
+          System.out.println("sumLogProbs(p, (float) Math.log(missingMass[i]))" + sumLogProbs(p, (float) Math.log(missingMass[i])));
+          System.out.println("p" + p);
+          System.out.println("pafter" + sumLogProbs(jump, link));
+        }
+
         p = sumLogProbs(jump, link);
         node.setPageRank(i, p);
       }
