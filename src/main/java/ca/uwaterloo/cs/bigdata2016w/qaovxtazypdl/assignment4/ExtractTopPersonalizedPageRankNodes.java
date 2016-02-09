@@ -17,6 +17,7 @@ import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.FloatWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -28,6 +29,12 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.Logger;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.fs.Path;
 
 import tl.lin.data.pair.PairOfObjectFloat;
 import tl.lin.data.pair.PairOfIntFloat;
@@ -76,7 +83,7 @@ public class ExtractTopPersonalizedPageRankNodes extends Configured implements T
   }
 
   private static class MyReducer extends
-      Reducer<IntWritable, PairOfIntFloat, IntWritable, FloatWritable> {
+      Reducer<IntWritable, PairOfIntFloat, LongWritable, Text> {
     private TopScoredObjects<Integer>[] queues;
     private ArrayList<Long> sources = new ArrayList<Long>();
 
@@ -108,20 +115,15 @@ public class ExtractTopPersonalizedPageRankNodes extends Configured implements T
 
     @Override
     public void cleanup(Context context) throws IOException, InterruptedException {
-      IntWritable key = new IntWritable();
-      FloatWritable value = new FloatWritable();
+      LongWritable key = new LongWritable();
+      Text value = new Text();
       int srcCount = context.getConfiguration().getInt("srcCount", 1);
 
       for (int i = 0; i < srcCount; i++) {
-        System.out.println("Source: " + sources.get(i));
+        key.set(sources.get(i));
         for (PairOfObjectFloat<Integer> pair : queues[i].extractAll()) {
-          key.set(pair.getLeftElement());
-          value.set(pair.getRightElement());
+          value.set(String.format("%.5f %d", (float) StrictMath.exp(pair.getRightElement()), pair.getLeftElement()));
           context.write(key, value);
-          System.out.printf("%.5f %d\n", (float) StrictMath.exp(pair.getRightElement()), pair.getLeftElement());
-        }
-        if (i < srcCount - 1) {
-          System.out.println();
         }
       }
     }
@@ -205,8 +207,8 @@ public class ExtractTopPersonalizedPageRankNodes extends Configured implements T
     job.setMapOutputKeyClass(IntWritable.class);
     job.setMapOutputValueClass(PairOfIntFloat.class);
 
-    job.setOutputKeyClass(IntWritable.class);
-    job.setOutputValueClass(FloatWritable.class);
+    job.setOutputKeyClass(LongWritable.class);
+    job.setOutputValueClass(Text.class);
 
     job.setMapperClass(MyMapper.class);
     job.setReducerClass(MyReducer.class);
@@ -215,6 +217,25 @@ public class ExtractTopPersonalizedPageRankNodes extends Configured implements T
     FileSystem.get(conf).delete(new Path(outputPath), true);
 
     job.waitForCompletion(true);
+
+    String srcStrings[] = sources.split(",");
+
+    FileSystem fs = FileSystem.get(getConf());
+    for (FileStatus f : fs.listStatus(new Path(outputPath + "/part-r-00000"))) {
+      FSDataInputStream fin = fs.open(f.getPath());
+      for (int s = 0; s < srcCount; s++) {
+        System.out.println("Source: " + srcStrings[s]);
+        for (int i = 0; i < n; i++) {
+          String r = fin.readLine();
+          System.out.println(r.substring(r.indexOf("\t") + 1));
+        }
+
+        if (s != srcCount - 1) {
+          System.out.println();
+        }
+      }
+      fin.close();
+    }
 
     return 0;
   }
