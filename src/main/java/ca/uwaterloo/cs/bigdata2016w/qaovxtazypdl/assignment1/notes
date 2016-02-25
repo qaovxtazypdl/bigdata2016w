@@ -1,5 +1,15 @@
-hadoop jar target/bigdata2016w-0.1.0-SNAPSHOT.jar    ca.uwaterloo.cs.bigdata2016w.qaovxtazypdl.assignment1.StripesPMI    -input data/Shakespeare.txt -output cs489-2016w-lintool-a1-shakespeare-stripes -reducers 5
-hadoop jar target/bigdata2016w-0.1.0-SNAPSHOT.jar    ca.uwaterloo.cs.bigdata2016w.qaovxtazypdl.assignment1.PairsPMI    -input data/Shakespeare.txt -output cs489-2016w-lintool-a1-shakespeare-pairs -reducers 5
+Q2:
+order key doesnt all exist
 
-hadoop jar target/bigdata2016w-0.1.0-SNAPSHOT.jar    ca.uwaterloo.cs.bigdata2016w.qaovxtazypdl.assignment1.PairsPMI    -input /shared/cs489/data/enwiki-20151201-pages-articles-0.1sample.txt -output cs489-2016w-lintool-a1-wiki-pairs -reducers 5
-hadoop jar target/bigdata2016w-0.1.0-SNAPSHOT.jar    ca.uwaterloo.cs.bigdata2016w.qaovxtazypdl.assignment1.StripesPMI    -input /shared/cs489/data/enwiki-20151201-pages-articles-0.1sample.txt -output cs489-2016w-lintool-a1-wiki-stripes -reducers 5
+
+
+
+
+
+
+
+
+
+
+
+cat lineitem.tbl | grep "|1996-01-01|.*|.*|.*|.*|.*|.*" | wc -l
