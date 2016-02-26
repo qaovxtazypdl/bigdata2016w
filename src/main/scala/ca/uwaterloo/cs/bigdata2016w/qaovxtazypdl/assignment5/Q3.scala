@@ -87,7 +87,7 @@ object Q3 {
           List((resultTuple._1, item._2, resultTuple._2))
         }
       })
-      .sortBy(_._1)
+      .sortBy(_._1.toInt)
       .take(20)
       .map(println)
   }

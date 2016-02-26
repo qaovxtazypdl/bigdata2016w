@@ -50,9 +50,12 @@ object Q2 {
       })
 
     lineItemTuples.cogroup(orderTuples)
-      .filter(_._2._1.size != 0)
-      .flatMap(data => data._2._2.map(x => (x, data._1)).toList)
-      .sortBy(_._2)
+      .flatMap(data => {
+        data._2._1.flatMap(lineItem => {
+          data._2._2.map(orderItem => (orderItem, data._1))
+        })
+      })
+      .sortBy(_._2.toInt)
       .take(20)
       .foreach(println)
   }
