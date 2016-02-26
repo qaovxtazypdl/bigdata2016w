@@ -38,7 +38,7 @@ object Q3 {
     //(suppkey, partkey, orderkey)
     val lineItems = sc
       .textFile(input + "/lineitem.tbl")
-      .filter(_.split('|')(10).equals(date))
+      .filter(_.split('|')(10).startsWith(date))
       .map(line => {
         val tokens = line.split('|')
         (tokens(2), tokens(1), tokens(0))

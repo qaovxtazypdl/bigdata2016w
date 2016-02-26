@@ -27,7 +27,7 @@ object Q1 {
     val sc = new SparkContext(conf)
 
     val textFile = sc.textFile(input + "/lineitem.tbl")
-    val numEntries = textFile.filter(_.split('|')(10).equals(date)).count()
+    val numEntries = textFile.filter(_.split('|')(10).startsWith(date)).count()
 
     println("ANSWER=" + numEntries)
   }

@@ -1,5 +1,6 @@
 handle alternate date formats
-
+test efficiency Q4 Q6 Q7
+query actual database to verify correctness
 
 
 
@@ -162,3 +163,6 @@ handle alternate date formats
 (09-1998,187,196)
 (10-1998,112,129)
 (11-1998,39,50)
+
+
+(N,O,7050.0,9670325.0,9158290.0,9535801.0,26.50376,36354.605,0.052744433,266)

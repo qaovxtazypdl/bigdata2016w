@@ -36,7 +36,7 @@ object Q2 {
 
     val lineItemTuples = sc
       .textFile(input + "/lineitem.tbl")
-      .filter(_.split('|')(10).equals(date))
+      .filter(_.split('|')(10).startsWith(date))
       .map(line => {
         val tokens = line.split('|')
         (tokens(0), "")
