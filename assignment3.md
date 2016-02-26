@@ -39,3 +39,23 @@ Query: internet startup AND canada AND ontario AND
 
 Amazon.com
 Criticism of Facebook
+
+Marks
+
+Q1 2
+Q2a 5
+Q2b 5
+Q3 5
+
+Q4 2
+Q5a 5
+Q5b 5
+Q6 5
+
+AC 5
+LC 5
+
+Total 44
+
+Comments
+- Reducer emitted Pair<VInt, BytesWritable> instead of just BytesWritable
