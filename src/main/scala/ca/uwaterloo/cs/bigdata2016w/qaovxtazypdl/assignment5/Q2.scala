@@ -8,11 +8,6 @@ import org.apache.spark.SparkConf
 object Q2 {
   val log = Logger.getLogger(getClass().getName())
 
-  def getTupleFromString(line : String): (String, String) = {
-    val (key, value) = line.split('|').splitAt(1)
-    (key(0), value.mkString("|"))
-  }
-
   def main(argv: Array[String]) {
     var input = ""
     var date = ""
@@ -42,16 +37,23 @@ object Q2 {
     val lineItemTuples = sc
       .textFile(input + "/lineitem.tbl")
       .filter(_.split('|')(10).equals(date))
-      .map(getTupleFromString)
+      .map(line => {
+        val tokens = line.split('|')
+        (tokens(0), "")
+      })
+
     val orderTuples = sc
       .textFile(input + "/orders.tbl")
-      .map(getTupleFromString)
+      .map(line => {
+        val tokens = line.split('|')
+        (tokens(0), tokens(6))
+      })
 
     lineItemTuples.cogroup(orderTuples)
       .filter(_._2._1.size != 0)
-      .flatMap(data => data._2._2.map(x => (x.split('|')(5), data._1)).toList)
+      .flatMap(data => data._2._2.map(x => (x, data._1)).toList)
       .sortBy(_._2)
       .take(20)
-      .map(println)
+      .foreach(println)
   }
 }

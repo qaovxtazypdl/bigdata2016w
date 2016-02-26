@@ -26,9 +26,74 @@ object Q3 {
     val conf = new SparkConf().setAppName("A5Q3")
     val sc = new SparkContext(conf)
 
-    val textFile = sc.textFile(input + "/lineitem.tbl")
-    val numEntries = textFile.filter(_.split('|')(10).equals(date)).count()
+    /*
+    select l_orderkey, p_name, s_name from lineitem, part, supplier
+    where
+      l_partkey = p_partkey and
+      l_suppkey = s_suppkey and
+      l_shipdate = 'YYYY-MM-DD'
+    order by l_orderkey asc limit 20;
+    */
 
-    println("ANSWER=" + numEntries)
+    //(suppkey, partkey, orderkey)
+    val lineItems = sc
+      .textFile(input + "/lineitem.tbl")
+      .filter(_.split('|')(10).equals(date))
+      .map(line => {
+        val tokens = line.split('|')
+        (tokens(2), tokens(1), tokens(0))
+      })
+
+    //(suppkey, name)
+    val suppliers = sc
+      .textFile(input + "/supplier.tbl")
+      .map(line => {
+        val tokens = line.split('|')
+        (tokens(0), tokens(1))
+      })
+
+    //(partkey, name)
+    val parts = sc
+      .textFile(input + "/part.tbl")
+      .map(line => {
+        val tokens = line.split('|')
+        (tokens(0), tokens(1))
+      })
+
+    //broadcast suppliers
+    val supplierEntries = sc.broadcast(suppliers.collectAsMap())
+
+    //join lineitems into suppliers (partkey, (orderkey, s_name))
+    val lineSuppliers = lineItems
+      .flatMap(item => {
+        val result = supplierEntries.value.getOrElse(item._1, None)
+        if (result eq None) {
+          List()
+        } else {
+          List((item._2, (item._3, result.asInstanceOf[String])))
+        }
+      })
+
+    val lineSupplierEntries = sc.broadcast(lineSuppliers.collectAsMap())
+
+    //join parts in (orderkey, p_name, s_name)
+    parts
+      .flatMap(item => {
+        val result = lineSupplierEntries.value.getOrElse(item._1, None)
+        if (result eq None) {
+          List()
+        } else {
+          val resultTuple = result.asInstanceOf[(String, String)]
+          List((resultTuple._1, item._2, resultTuple._2))
+        }
+      })
+      .sortBy(_._1)
+      .take(20)
+      .map(println)
+  }
+
+  def getTupleFromString(line : String): (String, String) = {
+    val (key, value) = line.split('|').splitAt(1)
+    (key(0), value.mkString("|"))
   }
 }

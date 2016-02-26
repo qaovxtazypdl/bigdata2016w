@@ -13,3 +13,52 @@ order key doesnt all exist
 
 
 cat lineitem.tbl | grep "|1996-01-01|.*|.*|.*|.*|.*|.*" | wc -l
+
+
+
+466
+
+(Clerk#000000477,102528)
+(Clerk#000000776,107207)
+(Clerk#000000409,107619)
+(Clerk#000000285,108774)
+(Clerk#000000728,109988)
+(Clerk#000000662,110885)
+(Clerk#000000338,111266)
+(Clerk#000000697,112868)
+(Clerk#000000405,113028)
+(Clerk#000000415,116166)
+(Clerk#000000360,121126)
+(Clerk#000000528,123747)
+(Clerk#000000514,126627)
+(Clerk#000000764,127494)
+(Clerk#000000342,129058)
+(Clerk#000000142,132771)
+(Clerk#000000237,134530)
+(Clerk#000000418,135623)
+(Clerk#000000135,136166)
+(Clerk#000000133,137319)
+
+
+(102528,slate spring rose violet sandy,Supplier#000000406)
+(107207,violet blush thistle hot linen,Supplier#000000289)
+(107619,goldenrod drab moccasin maroon sky,Supplier#000000629)
+(108774,white papaya blanched maroon purple,Supplier#000000322)
+(109988,royal yellow orchid lime wheat,Supplier#000000533)
+(110885,metallic saddle papaya light ghost,Supplier#000000067)
+(111266,almond white powder green blue,Supplier#000000768)
+(112868,antique cream rosy beige black,Supplier#000000841)
+(113028,cornsilk almond plum tomato tan,Supplier#000000861)
+(116166,drab ghost brown dark cornsilk,Supplier#000000203)
+(121126,smoke chiffon gainsboro dark rose,Supplier#000000989)
+(123747,burlywood wheat khaki medium drab,Supplier#000000740)
+(126627,aquamarine rose white lavender almond,Supplier#000000090)
+(127494,blush rosy azure linen aquamarine,Supplier#000000134)
+(129058,blanched sky snow orange navy,Supplier#000000046)
+(132771,cornsilk blue indian thistle spring,Supplier#000000559)
+(134530,olive dim green hot brown,Supplier#000000322)
+(135623,aquamarine olive salmon pale spring,Supplier#000000435)
+(136166,burlywood red green burnished rose,Supplier#000000031)
+(137319,cornflower dim moccasin linen dodger,Supplier#000000968)
+
+
