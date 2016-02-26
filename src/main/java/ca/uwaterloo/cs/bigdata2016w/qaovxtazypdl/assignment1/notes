@@ -1,21 +1,3 @@
-Q2:
-order key doesnt all exist
-
-
-
-
-
-
-
-
-
-
-
-
-cat lineitem.tbl | grep "|1996-01-01|.*|.*|.*|.*|.*|.*" | wc -l
-
-
-
 266
 
 

@@ -116,8 +116,7 @@ object Q5 {
         (dateString, keyIterable._2.size)
       })
 
-    println("(MONTH, UNITED STATES, CANADA)")
-    itemsUSA
+    val data = itemsUSA
       .cogroup(itemsCAN)
       .flatMap(data => {
         data._2._1.flatMap(usaCount => {
@@ -126,6 +125,8 @@ object Q5 {
       })
       .sortBy(item => (item._1.substring(3), item._1.substring(0,2)))
       .collect()
-      .foreach(println)
+
+    println("(MONTH, UNITED STATES, CANADA)")
+    data.foreach(println)
   }
 }
