@@ -28,44 +28,87 @@ object Q7 {
 
     /*
     select
-      l_returnflag,
-      l_linestatus,
-      sum(l_quantity) as sum_qty,
-      sum(l_extendedprice) as sum_base_price,
-      sum(l_extendedprice*(1-l_discount)) as sum_disc_price,
-      sum(l_extendedprice*(1-l_discount)*(1+l_tax)) as sum_charge,
-      avg(l_quantity) as avg_qty,
-      avg(l_extendedprice) as avg_price,
-      avg(l_discount) as avg_disc,
-      count(*) as count_order
-    from lineitem
+      c_name,
+      l_orderkey,
+      sum(l_extendedprice*(1-l_discount)) as revenue,
+      o_orderdate,
+      o_shippriority
+    from customer, orders, lineitem
     where
-      l_shipdate = 'YYYY-MM-DD'
-    group by l_returnflag, l_linestatus;
+      c_custkey = o_custkey and
+      l_orderkey = o_orderkey and
+      o_orderdate < "YYYY-MM-DD" and
+      l_shipdate > "YYYY-MM-DD"
+    group by
+      c_name,
+      l_orderkey,
+      o_orderdate,
+      o_shippriority
+    order by
+      revenue desc
+      limit 10;
     */
 
-    //(returnflag, linestatus) => (quantity, extendedprice, discount, tax)
+    //(orderkey, (discount, extendedprce))
     val lineItems = sc
       .textFile(input + "/lineitem.tbl")
-      .filter(_.split('|')(10).equals(date))
+      .filter(_.split('|')(10) > date)
       .map(line => {
         val tokens = line.split('|')
-        ((tokens(8), tokens(9)), (tokens(4).toInt, tokens(5).toInt, tokens(6).toInt, tokens(7).toInt))
+        (tokens(0), (tokens(6).toFloat, tokens(5).toFloat))
+      })
+
+    //(orderkey ,orderdate, shippriority, custkey)
+    val orders = sc
+      .textFile(input + "/orders.tbl")
+      .filter(_.split('|')(4) < date)
+      .map(line => {
+        val tokens = line.split('|')
+        (tokens(0), tokens(4), tokens(7), tokens(1))
+      })
+
+    //(custkey, name)
+    val customers = sc
+      .textFile(input + "/customer.tbl")
+      .map(line => {
+        val tokens = line.split('|')
+        (tokens(0), tokens(1))
       })
       .groupByKey()
-      .map(keyValuePair => {
-        val count = keyValuePair._2.size
-        val sums = Array(0,0,0,0,0) //quantity extended disc charge discount
-        keyValuePair._2.foreach(tuple => {
-          sums(0) += tuple._1
-          sums(1) += tuple._2
-          sums(2) += tuple._2 * (1-tuple._3)
-          sums(3) += tuple._2 * (1-tuple._3) * (1+tuple._4)
-          sums(4) += tuple._3
-        })
-        (keyValuePair._1._1, keyValuePair._1._2, sums(0), sums(1), sums(2), sums(3), sums(0)/count, sums(1)/count, sums(4)/count, count)
+
+    val customerMap = sc.broadcast(customers.collectAsMap())
+
+    //customers : custKey => listof(name)
+    //(orderkey ,orderdate, shippriority, custkey)
+    //join orders in => (orderkey, (orderdate, shippriority, name)) on custkey
+    val orderCustomers = orders
+      .flatMap(item => {
+        val result = customerMap.value.getOrElse(item._4, None)
+        if (result eq None) {
+          List()
+        } else {
+          result.asInstanceOf[Iterable[String]]
+            .map(x => (item._1, (item._2, item._3, x)))
+        }
       })
-      .collect()
+
+    //neither result guaranteed to fit in memory - use cogroup
+    //join lineitem in on orderkey
+
+    //lineitem: (orderkey, (discount, extendedprce))
+    //ordercustomers: (orderkey, (orderdate, shippriority, name))
+    //join result: (name, orderkey, orderdate, shippriority) => price*discount
+    lineItems
+      .cogroup(orderCustomers)
+      .flatMap(data => {
+        data._2._1.flatMap(lineItemEntry => {
+          data._2._2.map(orderItemEntry => ((orderItemEntry._3, data._1, orderItemEntry._1, orderItemEntry._2), lineItemEntry._2 * (1-lineItemEntry._1)))
+        })
+      })
+      .groupByKey()
+      .map(keyIterable => (keyIterable._1._1, keyIterable._1._2, keyIterable._2.sum, keyIterable._1._3, keyIterable._1._4))
+      .sortBy(-_._3)
+      .take(10)
       .foreach(println)
   }
 }
