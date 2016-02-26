@@ -91,9 +91,4 @@ object Q3 {
       .take(20)
       .map(println)
   }
-
-  def getTupleFromString(line : String): (String, String) = {
-    val (key, value) = line.split('|').splitAt(1)
-    (key(0), value.mkString("|"))
-  }
 }
