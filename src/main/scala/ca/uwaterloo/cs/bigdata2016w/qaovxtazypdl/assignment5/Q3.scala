@@ -65,27 +65,17 @@ object Q3 {
 
     //join lineitems into suppliers (partkey, (orderkey, s_name))
     val lineSuppliers = lineItems
-      .flatMap(item => {
-        val result = supplierEntries.value.getOrElse(item._1, None)
-        if (result eq None) {
-          List()
-        } else {
-          List((item._2, (item._3, result.asInstanceOf[String])))
-        }
-      })
+      .filter(item => supplierEntries.value.getOrElse(item._1, None) != None)
+      .map(item => (item._2, (item._3, supplierEntries.value.getOrElse(item._1, None).asInstanceOf[String])))
 
     val lineSupplierEntries = sc.broadcast(lineSuppliers.collectAsMap())
 
     //join parts in (orderkey, p_name, s_name)
     parts
-      .flatMap(item => {
-        val result = lineSupplierEntries.value.getOrElse(item._1, None)
-        if (result eq None) {
-          List()
-        } else {
-          val resultTuple = result.asInstanceOf[(String, String)]
-          List((resultTuple._1, item._2, resultTuple._2))
-        }
+      .filter(item => lineSupplierEntries.value.getOrElse(item._1, None) != None)
+      .map(item => {
+        val resultTuple = lineSupplierEntries.value.getOrElse(item._1, None).asInstanceOf[(String, String)]
+        (resultTuple._1, item._2, resultTuple._2)
       })
       .sortBy(_._1.toInt)
       .take(20)
