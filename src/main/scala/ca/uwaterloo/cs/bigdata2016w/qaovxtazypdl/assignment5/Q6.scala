@@ -45,6 +45,7 @@ object Q6 {
     */
 
     //(returnflag, linestatus) => (quantity, extendedprice, discount, tax)
+    /*
     val lineItems = sc
       .textFile(input + "/lineitem.tbl")
       .filter(_.split('|')(10).startsWith(date))
@@ -67,5 +68,35 @@ object Q6 {
       })
       .collect()
       .foreach(println)
+      */
+
+
+    //(returnflag, linestatus) => (quantity, extendedprice, discount, tax, discount)
+    val lineItems = sc
+        .textFile(input + "/lineitem.tbl")
+        .filter(_.split('|')(10).startsWith(date))
+        .map(line => {
+          val tokens = line.split('|')
+
+          val extended = tokens(5).toFloat
+          val discount = tokens(6).toFloat
+
+          ((tokens(8), tokens(9)), (tokens(4).toFloat, extended, extended*(1-discount), extended*(1-discount)*(1+tokens(7).toFloat), discount))
+        })
+        .groupByKey()
+        .map(keyValuePair => {
+          val count = keyValuePair._2.size
+          val sums = Array(0.0f,0.0f,0.0f,0.0f,0.0f) //quantity extended disc charge discount
+          keyValuePair._2.foreach(tuple => {
+            sums(0) += tuple._1
+            sums(1) += tuple._2
+            sums(2) += tuple._3
+            sums(3) += tuple._4
+            sums(4) += tuple._5
+          })
+          (keyValuePair._1._1, keyValuePair._1._2, sums(0), sums(1), sums(2), sums(3), sums(0)/count, sums(1)/count, sums(4)/count, count)
+        })
+        .collect()
+        .foreach(println)
   }
 }
