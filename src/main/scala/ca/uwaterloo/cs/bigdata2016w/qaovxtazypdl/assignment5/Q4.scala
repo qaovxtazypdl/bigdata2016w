@@ -40,10 +40,9 @@ object Q4 {
     //(orderkey, /)
     val lineItems = sc
       .textFile(input + "/lineitem.tbl")
-      .filter(_.split('|')(10).startsWith(date))
-      .map(line => {
+      .flatMap(line => {
         val tokens = line.split('|')
-        (tokens(0).toInt, "")
+        if (tokens(10).startsWith(date)) List((tokens(0).toInt, "")) else List()
       })
 
     //(orderkey, custkey)

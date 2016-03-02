@@ -53,19 +53,21 @@ object Q7 {
     //(orderkey, (discount, extendedprce))
     val lineItems = sc
       .textFile(input + "/lineitem.tbl")
-      .filter(_.split('|')(10) > date)
-      .map(line => {
+      .flatMap(line => {
         val tokens = line.split('|')
-        (tokens(0).toInt, tokens(5).toFloat * (1-tokens(6).toFloat))
+        if (tokens(10) > date)
+          List((tokens(0).toInt, tokens(5).toDouble * (1-tokens(6).toDouble)))
+        else List()
       })
 
     //(orderkey ,orderdate, shippriority, custkey)
     val orders = sc
       .textFile(input + "/orders.tbl")
-      .filter(_.split('|')(4) < date)
-      .map(line => {
+      .flatMap(line => {
         val tokens = line.split('|')
-        (tokens(0).toInt, tokens(4), tokens(7).toInt, tokens(1).toInt)
+        if (tokens(4) < date)
+          List((tokens(0).toInt, tokens(4), tokens(7).toInt, tokens(1).toInt))
+        else List()
       })
 
     //(custkey, name)
@@ -82,8 +84,7 @@ object Q7 {
     //customer key one to many to orders, fits in mem -> hashjoin
     val customerMap = sc.broadcast(customers.collectAsMap())
     val orderCustomers = orders
-      .filter(item => customerMap.value.contains(item._4))
-      .map(item => (item._1, (item._2, item._3, customerMap.value(item._4))))
+      .flatMap(item => if (customerMap.value.contains(item._4)) List((item._1, (item._2, item._3, customerMap.value(item._4)))) else List())
 
     //join lineitem in on orderkey
     //lineitem: (orderkey, (discount, extendedprce))

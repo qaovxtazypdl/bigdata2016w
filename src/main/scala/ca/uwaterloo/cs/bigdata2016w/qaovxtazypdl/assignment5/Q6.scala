@@ -46,14 +46,14 @@ object Q6 {
     //(returnflag, linestatus) => (quantity, extendedprice, discount, tax, discount)
     val lineItems = sc
         .textFile(input + "/lineitem.tbl")
-        //push down filter
-        .filter(_.split('|')(10).startsWith(date))
-        //then compute relevant aggeregate entries
-        .map(line => {
+        //pipeline filter and select
+        .flatMap(line => {
           val tokens = line.split('|')
-          val extended = tokens(5).toFloat
-          val discount = tokens(6).toFloat
-          ((tokens(8), tokens(9)), Array(tokens(4).toFloat, extended, extended*(1-discount), extended*(1-discount)*(1+tokens(7).toFloat), discount, 1))
+          val extended = tokens(5).toDouble
+          val discount = tokens(6).toDouble
+          if (tokens(10).startsWith(date)) //intermediate aggregate columns
+            List(((tokens(8), tokens(9)), Array(tokens(4).toDouble, extended, extended*(1-discount), extended*(1-discount)*(1+tokens(7).toDouble), discount, 1)))
+          else List()
         })
         .reduceByKey((acc, lst) => {
           acc(0) += lst(0)
@@ -64,6 +64,7 @@ object Q6 {
           acc(5) += lst(5)
           acc
         })
+        //very low amount of tuples being mapped => efficient aggregation
         .map(v => {
           (v._1._1, v._1._2, v._2(0), v._2(1), v._2(2), v._2(3), v._2(0)/v._2(5), v._2(1)/v._2(5), v._2(4)/v._2(5), v._2(5))
         })
