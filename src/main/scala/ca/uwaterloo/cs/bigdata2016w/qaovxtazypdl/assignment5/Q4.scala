@@ -43,7 +43,7 @@ object Q4 {
       .filter(_.split('|')(10).startsWith(date))
       .map(line => {
         val tokens = line.split('|')
-        (tokens(0), "")
+        (tokens(0).toInt, "")
       })
 
     //(orderkey, custkey)
@@ -51,7 +51,7 @@ object Q4 {
       .textFile(input + "/orders.tbl")
       .map(line => {
         val tokens = line.split('|')
-        (tokens(0), tokens(1))
+        (tokens(0).toInt, tokens(1).toInt)
       })
 
     //(custkey, nationkey)
@@ -59,7 +59,7 @@ object Q4 {
       .textFile(input + "/customer.tbl")
       .map(line => {
         val tokens = line.split('|')
-        (tokens(0), tokens(3))
+        (tokens(0).toInt, tokens(3).toInt)
       })
 
     //(nationkey, name)
@@ -67,7 +67,7 @@ object Q4 {
       .textFile(input + "/nation.tbl")
       .map(line => {
         val tokens = line.split('|')
-        (tokens(0), tokens(1))
+        (tokens(0).toInt, tokens(1))
       })
 
     //nation: nationkey => listof name
@@ -84,7 +84,7 @@ object Q4 {
     val customerNationMap = sc.broadcast(customerNation.collectAsMap())
     val orderNations = orders
       .filter(item => customerNationMap.value.getOrElse(item._2, None) != None)
-      .map(item => (item._1, customerNationMap.value.getOrElse(item._2, None).asInstanceOf[(String, String)]))
+      .map(item => (item._1, customerNationMap.value.getOrElse(item._2, None).asInstanceOf[(Int, String)]))
 
     //neither result guaranteed to fit in memory - use reduce-side cogroup join
     //join lineitem in on orderkey
@@ -93,13 +93,15 @@ object Q4 {
       //cartesian join on elements of same key
       .flatMap(data => {
         data._2._1.flatMap(custNationItem => {
-          data._2._2.map(lineItem => (lineItem, None))
+          data._2._2.map(lineItem => (lineItem, 1))
         })
       })
       //aggregate
-      .groupByKey()
-      .map(keyIterable => (keyIterable._1._1, keyIterable._1._2, keyIterable._2.size))
-      .sortBy(_._1.toInt)
+      //.groupByKey()
+      //.map(keyIterable => (keyIterable._1._1, keyIterable._1._2, keyIterable._2.size))
+      .reduceByKey(_+_)
+      .map(x => (x._1._1, x._1._2, x._2))
+      .sortBy(_._1)
       .collect()
       .foreach(println)
   }

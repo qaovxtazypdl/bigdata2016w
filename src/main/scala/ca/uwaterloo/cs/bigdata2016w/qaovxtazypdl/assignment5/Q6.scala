@@ -46,7 +46,7 @@ object Q6 {
     //(returnflag, linestatus) => (quantity, extendedprice, discount, tax, discount)
     val lineItems = sc
         .textFile(input + "/lineitem.tbl")
-        //then compute relevant aggeregate entries
+        //select columns
         .map(line => {
           val tokens = line.split('|')
           val extended = tokens(5).toFloat
