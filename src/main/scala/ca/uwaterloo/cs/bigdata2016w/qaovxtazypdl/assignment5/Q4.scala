@@ -75,16 +75,16 @@ object Q4 {
     //nationkey is one to many on customers -> hashjoin
     val nationMap = sc.broadcast(nation.collectAsMap())
     val customerNation = customers
-      .filter(item => nationMap.value.getOrElse(item._2, None) != None)
-      .map(item => (item._1, (item._2, nationMap.value.getOrElse(item._2, None).asInstanceOf[String])))
+      .filter(item => nationMap.value.contains(item._2))
+      .map(item => (item._1, (item._2, nationMap.value(item._2))))
 
     //customernation : custKey => listof(nationkey, name)
     //join orders in => (orderkey, (nationkey, name)) on custkey
     //custkey is one to many on orders -> hashjoin
     val customerNationMap = sc.broadcast(customerNation.collectAsMap())
     val orderNations = orders
-      .filter(item => customerNationMap.value.getOrElse(item._2, None) != None)
-      .map(item => (item._1, customerNationMap.value.getOrElse(item._2, None).asInstanceOf[(Int, String)]))
+      .filter(item => customerNationMap.value.contains(item._2))
+      .map(item => (item._1, customerNationMap.value(item._2)))
 
     //neither result guaranteed to fit in memory - use reduce-side cogroup join
     //join lineitem in on orderkey
@@ -92,15 +92,15 @@ object Q4 {
       .cogroup(orderNations)
       //cartesian join on elements of same key
       .flatMap(data => {
-        data._2._1.flatMap(custNationItem => {
-          data._2._2.map(lineItem => (lineItem, None))
+        data._2._1.flatMap(lineItem => {
+          data._2._2.map(custNationItem => (custNationItem, 1))
         })
       })
       //aggregate
-      .groupByKey()
-      .map(keyIterable => (keyIterable._1._1, keyIterable._1._2, keyIterable._2.size))
-      .sortBy(_._1.toInt)
+      .reduceByKey(_+_)
+      .map(x => (x._1._1, x._1._2, x._2))
       .collect()
+      .sortBy(_._1)
       .foreach(println)
   }
 }
