@@ -86,61 +86,71 @@ object Q6 {
         .groupByKey()
         .map(keyValuePair => {
           val count = keyValuePair._2.size
-          val arr = keyValuePair._2.toList
+          val arr = keyValuePair._2.toIterator
           val sums = Array(0.0f,0.0f,0.0f,0.0f,0.0f) //quantity extended disc charge discount
 
           for (i <- count % 8 until count by 8) {
-            sums(0) += arr(i)._1
-            sums(0) += arr(i+1)._1
-            sums(0) += arr(i+2)._1
-            sums(0) += arr(i+3)._1
-            sums(0) += arr(i+4)._1
-            sums(0) += arr(i+5)._1
-            sums(0) += arr(i+6)._1
-            sums(0) += arr(i+7)._1
+            val l1 = arr.next()
+            val l2 = arr.next()
+            val l3 = arr.next()
+            val l4 = arr.next()
+            val l5 = arr.next()
+            val l6 = arr.next()
+            val l7 = arr.next()
+            val l8 = arr.next()
 
-            sums(1) += arr(i)._2
-            sums(1) += arr(i+1)._2
-            sums(1) += arr(i+2)._2
-            sums(1) += arr(i+3)._2
-            sums(1) += arr(i+4)._2
-            sums(1) += arr(i+5)._2
-            sums(1) += arr(i+6)._2
-            sums(1) += arr(i+7)._2
+            sums(0) += l1._1
+            sums(0) += l2._1
+            sums(0) += l3._1
+            sums(0) += l4._1
+            sums(0) += l5._1
+            sums(0) += l6._1
+            sums(0) += l7._1
+            sums(0) += l8._1
 
-            sums(2) += arr(i)._3
-            sums(2) += arr(i+1)._3
-            sums(2) += arr(i+2)._3
-            sums(2) += arr(i+3)._3
-            sums(2) += arr(i+4)._3
-            sums(2) += arr(i+5)._3
-            sums(2) += arr(i+6)._3
-            sums(2) += arr(i+7)._3
+            sums(1) += l1._2
+            sums(1) += l2._2
+            sums(1) += l3._2
+            sums(1) += l4._2
+            sums(1) += l5._2
+            sums(1) += l6._2
+            sums(1) += l7._2
+            sums(1) += l8._2
 
-            sums(3) += arr(i)._4
-            sums(3) += arr(i+1)._4
-            sums(3) += arr(i+2)._4
-            sums(3) += arr(i+3)._4
-            sums(3) += arr(i+4)._4
-            sums(3) += arr(i+5)._4
-            sums(3) += arr(i+6)._4
-            sums(3) += arr(i+7)._4
+            sums(2) += l1._3
+            sums(2) += l2._3
+            sums(2) += l3._3
+            sums(2) += l4._3
+            sums(2) += l5._3
+            sums(2) += l6._3
+            sums(2) += l7._3
+            sums(2) += l8._3
 
-            sums(4) += arr(i)._5
-            sums(4) += arr(i+1)._5
-            sums(4) += arr(i+2)._5
-            sums(4) += arr(i+3)._5
-            sums(4) += arr(i+4)._5
-            sums(4) += arr(i+5)._5
-            sums(4) += arr(i+6)._5
-            sums(4) += arr(i+7)._5
+            sums(3) += l1._4
+            sums(3) += l2._4
+            sums(3) += l3._4
+            sums(3) += l4._4
+            sums(3) += l5._4
+            sums(3) += l6._4
+            sums(3) += l7._4
+            sums(3) += l8._4
+
+            sums(4) += l1._5
+            sums(4) += l2._5
+            sums(4) += l3._5
+            sums(4) += l4._5
+            sums(4) += l5._5
+            sums(4) += l6._5
+            sums(4) += l7._5
+            sums(4) += l8._5
           }
-          for (i <- 0 until count % 8) {
-            sums(0) += arr(i)._1
-            sums(1) += arr(i)._2
-            sums(2) += arr(i)._3
-            sums(3) += arr(i)._4
-            sums(4) += arr(i)._5
+          while (arr.hasNext) {
+            val el = arr.next()
+            sums(0) += el._1
+            sums(1) += el._2
+            sums(2) += el._3
+            sums(3) += el._4
+            sums(4) += el._5
           }
 
           (keyValuePair._1._1, keyValuePair._1._2, sums(0), sums(1), sums(2), sums(3), sums(0)/count, sums(1)/count, sums(4)/count, count)
