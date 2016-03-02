@@ -75,28 +75,16 @@ object Q4 {
     //nation: nationkey => listof name
     //join customers in => (custKey, (nationkey, name)) on nationkey
     val customerNation = customers
-      .flatMap(item => {
-        val result = nationMap.value.getOrElse(item._2, None)
-        if (result eq None) {
-          List()
-        } else {
-          List((item._1, (item._2, result.asInstanceOf[String])))
-        }
-      })
+      .filter(item => nationMap.value.getOrElse(item._2, None) != None)
+      .map(item => (item._1, (item._2, nationMap.value.getOrElse(item._2, None).asInstanceOf[String])))
 
     val customerNationMap = sc.broadcast(customerNation.collectAsMap())
 
     //customernation : custKey => listof(nationkey, name)
     //join orders in => (orderkey, (nationkey, name)) on custkey
     val orderNations = orders
-      .flatMap(item => {
-        val result = customerNationMap.value.getOrElse(item._2, None)
-        if (result eq None) {
-          List()
-        } else {
-          List((item._1, result.asInstanceOf[(String, String)]))
-        }
-      })
+      .filter(item => customerNationMap.value.getOrElse(item._2, None) != None)
+      .map(item => (item._1, customerNationMap.value.getOrElse(item._2, None).asInstanceOf[(String, String)]))
 
     //neither result guaranteed to fit in memory - use cogroup
     //join lineitem in on orderkey
