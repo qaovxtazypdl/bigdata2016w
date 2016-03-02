@@ -43,7 +43,6 @@ object Q6 {
       l_shipdate = 'YYYY-MM-DD'
     group by l_returnflag, l_linestatus;
     */
-
     //(returnflag, linestatus) => (quantity, extendedprice, discount, tax, discount)
     val lineItems = sc
         .textFile(input + "/lineitem.tbl")
@@ -62,7 +61,7 @@ object Q6 {
         .map(keyValuePair => {
           val count = keyValuePair._2.size
           val sums = Array(0.0f,0.0f,0.0f,0.0f,0.0f) //quantity extended disc charge discount
-
+/*
           val arr = keyValuePair._2.toIterator
           for (i <- count%8 until count by 8) {
             val l1 = arr.next()
@@ -132,9 +131,9 @@ object Q6 {
             sums(3) += el._4
             sums(4) += el._5
           }
+*/
 
-/*
-(running time is actually about the same...)
+//(running time is actually about the same compared to "vectorized"... maybe because row store)
           keyValuePair._2.foreach(tuple => {
             sums(0) += tuple._1
             sums(1) += tuple._2
@@ -142,7 +141,6 @@ object Q6 {
             sums(3) += tuple._4
             sums(4) += tuple._5
           })
-*/
 
           (keyValuePair._1._1, keyValuePair._1._2, sums(0), sums(1), sums(2), sums(3), sums(0)/count, sums(1)/count, sums(4)/count, count)
         })

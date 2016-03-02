@@ -52,25 +52,19 @@ object Q7 {
     //(orderkey, (discount, extendedprce))
     val lineItems = sc
       .textFile(input + "/lineitem.tbl")
-      .flatMap(item => {
-        val tokens = item.split('|')
-        if (tokens(10) > date) {
-          List((tokens(0), (tokens(6).toFloat, tokens(5).toFloat)))
-        } else {
-          List()
-        }
+      .filter(_.split('|')(10) > date)
+      .map(line => {
+        val tokens = line.split('|')
+        (tokens(0), (tokens(6).toFloat, tokens(5).toFloat))
       })
 
     //(orderkey ,orderdate, shippriority, custkey)
     val orders = sc
       .textFile(input + "/orders.tbl")
-      .flatMap(item => {
-        val tokens = item.split('|')
-        if (tokens(4) < date) {
-          List((tokens(0), tokens(4), tokens(7), tokens(1)))
-        } else {
-          List()
-        }
+      .filter(_.split('|')(4) < date)
+      .map(line => {
+        val tokens = line.split('|')
+        (tokens(0), tokens(4), tokens(7), tokens(1))
       })
 
     //(custkey, name)
@@ -103,7 +97,6 @@ object Q7 {
         })
       })
       .groupByKey()
-      //no room for SIMD on sum of one element in the tuple - sum must be updated every iteration, no parallelization.
       .map(keyIterable => (keyIterable._1._1, keyIterable._1._2, keyIterable._2.sum, keyIterable._1._3, keyIterable._1._4))
       .sortBy(-_._3)
       .take(10)
