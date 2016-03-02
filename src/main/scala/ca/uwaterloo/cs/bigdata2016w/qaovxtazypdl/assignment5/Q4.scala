@@ -93,15 +93,13 @@ object Q4 {
       //cartesian join on elements of same key
       .flatMap(data => {
         data._2._1.flatMap(custNationItem => {
-          data._2._2.map(lineItem => (lineItem, 1))
+          data._2._2.map(lineItem => (lineItem, None))
         })
       })
       //aggregate
-      //.groupByKey()
-      //.map(keyIterable => (keyIterable._1._1, keyIterable._1._2, keyIterable._2.size))
-      .reduceByKey(_+_)
-      //.map(x => (x._1._1, x._1._2, x._2))
-      .sortBy(_._1._1)
+      .groupByKey()
+      .map(keyIterable => (keyIterable._1._1, keyIterable._1._2, keyIterable._2.size))
+      .sortBy(_._1.toInt)
       .collect()
       .foreach(println)
   }
