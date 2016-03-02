@@ -80,7 +80,7 @@ object Q7 {
         val itemdate = tokens(4)
         val tok4 = tokens(1).toInt
         val cmap = customerMap.value
-        if (cmap.contains(tok4) && itemdate < date) List((tokens(0).toInt, (date, tokens(7).toInt, cmap(tok4)))) else List()
+        if (cmap.contains(tok4) && itemdate < date) List((tokens(0).toInt, (itemdate, tokens(7).toInt, cmap(tok4)))) else List()
       })
 
     //join lineitem in on orderkey
