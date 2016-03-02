@@ -37,30 +37,6 @@ object Q4 {
     order by n_nationkey asc;
     */
 
-    //(orderkey, /)
-    val lineItems = sc
-      .textFile(input + "/lineitem.tbl")
-      .flatMap(line => {
-        val tokens = line.split('|')
-        if (tokens(10).startsWith(date)) List((tokens(0).toInt, "")) else List()
-      })
-
-    //(orderkey, custkey)
-    val orders = sc
-      .textFile(input + "/orders.tbl")
-      .map(line => {
-        val tokens = line.split('|')
-        (tokens(0).toInt, tokens(1).toInt)
-      })
-
-    //(custkey, nationkey)
-    val customers = sc
-      .textFile(input + "/customer.tbl")
-      .map(line => {
-        val tokens = line.split('|')
-        (tokens(0).toInt, tokens(3).toInt)
-      })
-
     //(nationkey, name)
     val nation = sc
       .textFile(input + "/nation.tbl")
@@ -73,25 +49,34 @@ object Q4 {
     //join customers in => (custKey, (nationkey, name)) on nationkey
     //nationkey is one to many on customers -> hashjoin
     val nationMap = sc.broadcast(nation.collectAsMap())
-    val customerNation = customers
+    val customerNation = sc.textFile(input + "/customer.tbl")
       .flatMap(item => {
+        val tokens = item.split('|')
+        val tok3 = tokens(3).toInt
         val nmap = nationMap.value
-        if (nmap.contains(item._2)) List((item._1, (item._2, nmap(item._2)))) else List()
+        if (nmap.contains(tok3)) List((tokens(0).toInt, (tok3, nmap(tok3)))) else List()
       })
 
     //customernation : custKey => listof(nationkey, name)
     //join orders in => (orderkey, (nationkey, name)) on custkey
     //custkey is one to many on orders -> hashjoin
     val customerNationMap = sc.broadcast(customerNation.collectAsMap())
-    val orderNations = orders
+    val orderNations = sc.textFile(input + "/orders.tbl")
       .flatMap(item => {
+        val tokens = item.split('|')
+        val tok1 = tokens(1).toInt
         val cnmap = customerNationMap.value
-        if (cnmap.contains(item._2)) List((item._1, cnmap(item._2))) else List()
+        if (cnmap.contains(tok1)) List((tokens(0).toInt, cnmap(tok1))) else List()
       })
 
     //neither result guaranteed to fit in memory - use reduce-side cogroup join
     //join lineitem in on orderkey
-    lineItems
+    sc
+      .textFile(input + "/lineitem.tbl")
+      .flatMap(line => {
+        val tokens = line.split('|')
+        if (tokens(10).startsWith(date)) List((tokens(0).toInt, "")) else List()
+      })
       .cogroup(orderNations)
       //cartesian join on elements of same key
       .flatMap(data => {
