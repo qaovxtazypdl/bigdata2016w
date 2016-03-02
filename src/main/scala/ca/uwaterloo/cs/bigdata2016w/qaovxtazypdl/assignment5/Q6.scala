@@ -64,7 +64,7 @@ object Q6 {
           val sums = Array(0.0f,0.0f,0.0f,0.0f,0.0f) //quantity extended disc charge discount
 
           val arr = keyValuePair._2.toIterator
-          for (i <- count % 8 until count by 8) {
+          for (i <- 0 until count by 8) {
             val l1 = arr.next()
             val l2 = arr.next()
             val l3 = arr.next()

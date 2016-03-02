@@ -52,19 +52,25 @@ object Q7 {
     //(orderkey, (discount, extendedprce))
     val lineItems = sc
       .textFile(input + "/lineitem.tbl")
-      .filter(_.split('|')(10) > date)
-      .map(line => {
-        val tokens = line.split('|')
-        (tokens(0), (tokens(6).toFloat, tokens(5).toFloat))
+      .flatMap(item => {
+        val tokens = item.split('|');
+        if (tokens(10) > date) {
+          List((tokens(0), (tokens(6).toFloat, tokens(5).toFloat)))
+        } else {
+          List()
+        }
       })
 
     //(orderkey ,orderdate, shippriority, custkey)
     val orders = sc
       .textFile(input + "/orders.tbl")
-      .filter(_.split('|')(4) < date)
-      .map(line => {
-        val tokens = line.split('|')
-        (tokens(0), tokens(4), tokens(7), tokens(1))
+      .flatMap(item => {
+        val tokens = item.split('|');
+        if (tokens(4) < date) {
+          List((tokens(0), tokens(4), tokens(7), tokens(1)))
+        } else {
+          List()
+        }
       })
 
     //(custkey, name)
