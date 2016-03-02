@@ -86,14 +86,63 @@ object Q6 {
         .groupByKey()
         .map(keyValuePair => {
           val count = keyValuePair._2.size
+          val arr = keyValuePair._2.toList
           val sums = Array(0.0f,0.0f,0.0f,0.0f,0.0f) //quantity extended disc charge discount
-          keyValuePair._2.foreach(tuple => {
-            sums(0) += tuple._1
-            sums(1) += tuple._2
-            sums(2) += tuple._3
-            sums(3) += tuple._4
-            sums(4) += tuple._5
-          })
+
+          for (i <- count % 8 until count by 8) {
+            sums(0) += arr(i)._1
+            sums(0) += arr(i+1)._1
+            sums(0) += arr(i+2)._1
+            sums(0) += arr(i+3)._1
+            sums(0) += arr(i+4)._1
+            sums(0) += arr(i+5)._1
+            sums(0) += arr(i+6)._1
+            sums(0) += arr(i+7)._1
+
+            sums(1) += arr(i)._2
+            sums(1) += arr(i+1)._2
+            sums(1) += arr(i+2)._2
+            sums(1) += arr(i+3)._2
+            sums(1) += arr(i+4)._2
+            sums(1) += arr(i+5)._2
+            sums(1) += arr(i+6)._2
+            sums(1) += arr(i+7)._2
+
+            sums(2) += arr(i)._3
+            sums(2) += arr(i+1)._3
+            sums(2) += arr(i+2)._3
+            sums(2) += arr(i+3)._3
+            sums(2) += arr(i+4)._3
+            sums(2) += arr(i+5)._3
+            sums(2) += arr(i+6)._3
+            sums(2) += arr(i+7)._3
+
+            sums(3) += arr(i)._4
+            sums(3) += arr(i+1)._4
+            sums(3) += arr(i+2)._4
+            sums(3) += arr(i+3)._4
+            sums(3) += arr(i+4)._4
+            sums(3) += arr(i+5)._4
+            sums(3) += arr(i+6)._4
+            sums(3) += arr(i+7)._4
+
+            sums(4) += arr(i)._5
+            sums(4) += arr(i+1)._5
+            sums(4) += arr(i+2)._5
+            sums(4) += arr(i+3)._5
+            sums(4) += arr(i+4)._5
+            sums(4) += arr(i+5)._5
+            sums(4) += arr(i+6)._5
+            sums(4) += arr(i+7)._5
+          }
+          for (i <- 0 until count % 8) {
+            sums(0) += arr(i)._1
+            sums(1) += arr(i)._2
+            sums(2) += arr(i)._3
+            sums(3) += arr(i)._4
+            sums(4) += arr(i)._5
+          }
+
           (keyValuePair._1._1, keyValuePair._1._2, sums(0), sums(1), sums(2), sums(3), sums(0)/count, sums(1)/count, sums(4)/count, count)
         })
         .collect()
