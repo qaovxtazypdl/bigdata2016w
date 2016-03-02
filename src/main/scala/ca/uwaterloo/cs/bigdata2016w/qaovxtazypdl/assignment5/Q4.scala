@@ -100,8 +100,8 @@ object Q4 {
       //.groupByKey()
       //.map(keyIterable => (keyIterable._1._1, keyIterable._1._2, keyIterable._2.size))
       .reduceByKey(_+_)
-      .map(x => (x._1._1, x._1._2, x._2))
-      .sortBy(_._1)
+      //.map(x => (x._1._1, x._1._2, x._2))
+      .sortBy(_._1._1)
       .collect()
       .foreach(println)
   }
