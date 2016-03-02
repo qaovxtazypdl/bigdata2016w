@@ -60,16 +60,6 @@ object Q7 {
         else List()
       })
 
-    //(orderkey ,orderdate, shippriority, custkey)
-    val orders = sc
-      .textFile(input + "/orders.tbl")
-      .flatMap(line => {
-        val tokens = line.split('|')
-        if (tokens(4) < date)
-          List((tokens(0).toInt, tokens(4), tokens(7).toInt, tokens(1).toInt))
-        else List()
-      })
-
     //(custkey, name)
     val customers = sc
       .textFile(input + "/customer.tbl")
@@ -83,10 +73,14 @@ object Q7 {
     //join orders in => (orderkey, (orderdate, shippriority, name)) on custkey
     //customer key one to many to orders, fits in mem -> hashjoin
     val customerMap = sc.broadcast(customers.collectAsMap())
-    val orderCustomers = orders
+    val orderCustomers = sc
+      .textFile(input + "/orders.tbl")
       .flatMap(item => {
+        val tokens = item.split('|')
+        val itemdate = tokens(4)
+        val tok4 = tokens(1).toInt
         val cmap = customerMap.value
-        if (cmap.contains(item._4)) List((item._1, (item._2, item._3, cmap(item._4)))) else List()
+        if (cmap.contains(tok4) && itemdate < date) List((tokens(0).toInt, (date, tokens(7).toInt, cmap(tok4)))) else List()
       })
 
     //join lineitem in on orderkey
@@ -94,7 +88,14 @@ object Q7 {
     //ordercustomers: (orderkey, (orderdate, shippriority, name))
     //neither table guaranteed to fit in memory -> cogroup reduce side join
     //join result: (name, orderkey, orderdate, shippriority) => price*discount
-    lineItems
+    sc
+      .textFile(input + "/lineitem.tbl")
+      .flatMap(line => {
+        val tokens = line.split('|')
+        if (tokens(10) > date)
+          List((tokens(0).toInt, tokens(5).toDouble * (1-tokens(6).toDouble)))
+        else List()
+      })
       .cogroup(orderCustomers)
       .flatMap(data => {
         data._2._2.map(orderItemEntry => {
