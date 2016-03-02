@@ -69,8 +69,6 @@ object Q4 {
         val tokens = line.split('|')
         (tokens(0), tokens(1))
       })
-      .groupByKey()
-
 
     val nationMap = sc.broadcast(nation.collectAsMap())
 
@@ -82,11 +80,9 @@ object Q4 {
         if (result eq None) {
           List()
         } else {
-          result.asInstanceOf[Iterable[String]]
-            .map(x => (item._1, (item._2, x)))
+          List((item._1, (item._2, result.asInstanceOf[String])))
         }
       })
-      .groupByKey()
 
     val customerNationMap = sc.broadcast(customerNation.collectAsMap())
 
@@ -98,8 +94,7 @@ object Q4 {
         if (result eq None) {
           List()
         } else {
-          result.asInstanceOf[Iterable[(String, String)]]
-            .map(x => (item._1, x))
+          List((item._1, result.asInstanceOf[(String, String)]))
         }
       })
 

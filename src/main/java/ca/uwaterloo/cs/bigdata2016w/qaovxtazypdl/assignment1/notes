@@ -2,7 +2,7 @@ test efficiency Q4 Q6 Q7
 query actual database to verify correctness
 
 
-
+spark-submit --class ca.uwaterloo.cs.bigdata2016w.qaovxtazypdl.assignment5.Q4 target/bigdata2016w-0.1.0-SNAPSHOT.jar --input data/TPC-H-0.1-TXT --date '1996-01-01'
 
 
 
@@ -51,6 +51,33 @@ query actual database to verify correctness
 (32069,cornsilk medium midnight coral mint,Supplier#000000867)
 (33734,powder smoke aquamarine midnight grey,Supplier#000000166)
 (37703,chartreuse plum orchid violet lavender,Supplier#000000187)
+
+(0,ALGERIA,5)
+(1,ARGENTINA,8)
+(2,BRAZIL,15)
+(3,CANADA,12)
+(4,EGYPT,8)
+(5,ETHIOPIA,6)
+(6,FRANCE,9)
+(7,GERMANY,17)
+(8,INDIA,8)
+(9,INDONESIA,13)
+(10,IRAN,14)
+(11,IRAQ,13)
+(12,JAPAN,19)
+(13,JORDAN,14)
+(14,KENYA,7)
+(15,MOROCCO,10)
+(16,MOZAMBIQUE,9)
+(17,PERU,8)
+(18,CHINA,4)
+(19,ROMANIA,21)
+(20,SAUDI ARABIA,9)
+(21,VIETNAM,7)
+(22,RUSSIA,13)
+(23,UNITED KINGDOM,8)
+(24,UNITED STATES,9)
+
 
 (0,ALGERIA,5)
 (1,ARGENTINA,8)
