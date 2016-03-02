@@ -74,29 +74,20 @@ object Q7 {
         val tokens = line.split('|')
         (tokens(0), tokens(1))
       })
-      .groupByKey()
-
-    val customerMap = sc.broadcast(customers.collectAsMap())
 
     //customers : custKey => listof(name)
     //(orderkey ,orderdate, shippriority, custkey)
     //join orders in => (orderkey, (orderdate, shippriority, name)) on custkey
+    //customer key one to many to orders, fits in mem -> hashjoin
+    val customerMap = sc.broadcast(customers.collectAsMap())
     val orderCustomers = orders
-      .flatMap(item => {
-        val result = customerMap.value.getOrElse(item._4, None)
-        if (result eq None) {
-          List()
-        } else {
-          result.asInstanceOf[Iterable[String]]
-            .map(x => (item._1, (item._2, item._3, x)))
-        }
-      })
+      .filter(item => customerMap.value.getOrElse(item._4, None) != None)
+      .map(item => (item._1, (item._2, item._3, customerMap.value.getOrElse(item._4, None).asInstanceOf[String])))
 
-    //neither result guaranteed to fit in memory - use cogroup
     //join lineitem in on orderkey
-
     //lineitem: (orderkey, (discount, extendedprce))
     //ordercustomers: (orderkey, (orderdate, shippriority, name))
+    //neither table guaranteed to fit in memory -> cogroup reduce side join
     //join result: (name, orderkey, orderdate, shippriority) => price*discount
     lineItems
       .cogroup(orderCustomers)
