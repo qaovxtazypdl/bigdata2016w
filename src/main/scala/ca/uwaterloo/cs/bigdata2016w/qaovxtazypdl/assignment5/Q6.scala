@@ -46,15 +46,15 @@ object Q6 {
     //(returnflag, linestatus) => (quantity, extendedprice, discount, tax, discount)
     val lineItems = sc
         .textFile(input + "/lineitem.tbl")
-        //select columns
+        //push down filter
+        .filter(_.split('|')(10).startsWith(date))
+        //then compute relevant aggeregate entries
         .map(line => {
           val tokens = line.split('|')
           val extended = tokens(5).toFloat
           val discount = tokens(6).toFloat
-          ((tokens(8), tokens(9)), (tokens(4).toFloat, extended, extended*(1-discount), extended*(1-discount)*(1+tokens(7).toFloat), discount, tokens(10)))
+          ((tokens(8), tokens(9)), (tokens(4).toFloat, extended, extended*(1-discount), extended*(1-discount)*(1+tokens(7).toFloat), discount))
         })
-        //push down filter
-        .filter(_._2._6.startsWith(date))
         //group by the aggregate key
         .groupByKey()
         //do the aggregation
