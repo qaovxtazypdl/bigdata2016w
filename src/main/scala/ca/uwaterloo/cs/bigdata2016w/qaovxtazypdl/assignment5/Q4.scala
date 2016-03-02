@@ -84,7 +84,6 @@ object Q4 {
     //custkey is one to many on orders -> hashjoin
     val customerNationMap = sc.broadcast(customerNation.collectAsMap())
     val orderNations = orders
-      .filter(item => customerNationMap.value.contains(item._2))
       .flatMap(item => {
         val cnmap = customerNationMap.value
         if (cnmap.contains(item._2)) List((item._1, cnmap(item._2))) else List()

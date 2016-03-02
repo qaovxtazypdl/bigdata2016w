@@ -65,10 +65,7 @@ object Q6 {
           acc
         })
         //very low amount of tuples being mapped => efficient aggregation
-        .map(v => {
-          (v._1._1, v._1._2, v._2(0), v._2(1), v._2(2), v._2(3), v._2(0)/v._2(5), v._2(1)/v._2(5), v._2(4)/v._2(5), v._2(5))
-        })
         .collect()
-        .foreach(println)
+        .foreach(v => println((v._1._1, v._1._2, v._2(0), v._2(1), v._2(2), v._2(3), v._2(0)/v._2(5), v._2(1)/v._2(5), v._2(4)/v._2(5), v._2(5))))
   }
 }
