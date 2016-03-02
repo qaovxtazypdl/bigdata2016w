@@ -98,9 +98,8 @@ object Q4 {
       })
       //aggregate
       .reduceByKey(_+_)
-      .map(x => (x._1._1, x._1._2, x._2))
       .collect()
-      .sortBy(_._1)
-      .foreach(println)
+      .sortBy(_._1._1)
+      .foreach(x => println((x._1._1, x._1._2, x._2)))
   }
 }
