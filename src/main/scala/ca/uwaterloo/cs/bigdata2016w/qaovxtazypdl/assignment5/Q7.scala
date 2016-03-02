@@ -3,6 +3,7 @@ package ca.uwaterloo.cs.bigdata2016w.qaovxtazypdl.assignment5
 import org.apache.log4j._
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkConf
+import scala.math.Ordering._
 
 
 object Q7 {
@@ -98,8 +99,7 @@ object Q7 {
       })
       .groupByKey()
       .map(keyIterable => (keyIterable._1._1, keyIterable._1._2, keyIterable._2.sum, keyIterable._1._3, keyIterable._1._4))
-      .sortBy(-_._3)
-      .take(10)
+      .takeOrdered(10)(Ordering.by(-_._3))
       .foreach(println)
   }
 }
