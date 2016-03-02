@@ -74,8 +74,10 @@ object Q4 {
     //nationkey is one to many on customers -> hashjoin
     val nationMap = sc.broadcast(nation.collectAsMap())
     val customerNation = customers
-      .filter(item => nationMap.value.contains(item._2))
-      .map(item => (item._1, (item._2, nationMap.value(item._2))))
+      .flatMap(item => {
+        val nmap = nationMap.value
+        if (nmap.contains(item._2)) List((item._1, (item._2, nmap(item._2)))) else List()
+      })
 
     //customernation : custKey => listof(nationkey, name)
     //join orders in => (orderkey, (nationkey, name)) on custkey
@@ -83,7 +85,10 @@ object Q4 {
     val customerNationMap = sc.broadcast(customerNation.collectAsMap())
     val orderNations = orders
       .filter(item => customerNationMap.value.contains(item._2))
-      .map(item => (item._1, customerNationMap.value(item._2)))
+      .flatMap(item => {
+        val cnmap = customerNationMap.value
+        if (cnmap.contains(item._2)) List((item._1, cnmap(item._2))) else List()
+      })
 
     //neither result guaranteed to fit in memory - use reduce-side cogroup join
     //join lineitem in on orderkey

@@ -84,7 +84,10 @@ object Q7 {
     //customer key one to many to orders, fits in mem -> hashjoin
     val customerMap = sc.broadcast(customers.collectAsMap())
     val orderCustomers = orders
-      .flatMap(item => if (customerMap.value.contains(item._4)) List((item._1, (item._2, item._3, customerMap.value(item._4)))) else List())
+      .flatMap(item => {
+        val cmap = customerMap.value
+        if (cmap.contains(item._4)) List((item._1, (item._2, item._3, cmap(item._4)))) else List()
+      })
 
     //join lineitem in on orderkey
     //lineitem: (orderkey, (discount, extendedprce))

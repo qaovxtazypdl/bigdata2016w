@@ -49,10 +49,10 @@ object Q6 {
         //pipeline filter and select
         .flatMap(line => {
           val tokens = line.split('|')
-          val extended = tokens(5).toDouble
-          val discount = tokens(6).toDouble
+          val extended = tokens(5).toFloat
+          val discount = tokens(6).toFloat
           if (tokens(10).startsWith(date)) //intermediate aggregate columns
-            List(((tokens(8), tokens(9)), Array(tokens(4).toDouble, extended, extended*(1-discount), extended*(1-discount)*(1+tokens(7).toDouble), discount, 1)))
+            List(((tokens(8), tokens(9)), Array(tokens(4).toFloat, extended, extended*(1-discount), extended*(1-discount)*(1+tokens(7).toFloat), discount, 1)))
           else List()
         })
         .reduceByKey((acc, lst) => {
