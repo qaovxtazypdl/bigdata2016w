@@ -92,9 +92,18 @@ object Q7 {
     //join result: (name, orderkey, orderdate, shippriority) => price*discount
     lineItems
       .cogroup(orderCustomers)
+      /*.flatMap(data => {
+        data._2._1.flatMap(lineItemEntry => {
+          data._2._2.map(orderItemEntry => ((orderItemEntry._3, data._1, orderItemEntry._1, orderItemEntry._2), lineItemEntry._2 * (1-lineItemEntry._1)))
+        })
+      })*/
       .flatMap(data => {
-        data._2._2.map(orderItemEntry => (orderItemEntry._3, data._1, data._2._1.sum, orderItemEntry._1, orderItemEntry._2))
+        data._2._2.map(orderItemEntry => {
+          (orderItemEntry._3, data._1, data._2._1.foldLeft(0.0f)((sum, v) => sum + v._2*(1-v._1)), orderItemEntry._1, orderItemEntry._2)
+        })
       })
+      //.groupByKey()
+      //.map(keyIterable => (keyIterable._1._1, keyIterable._1._2, keyIterable._2.sum, keyIterable._1._3, keyIterable._1._4))
       .takeOrdered(10)(Ordering.by(-_._3))
       .foreach(println)
   }
