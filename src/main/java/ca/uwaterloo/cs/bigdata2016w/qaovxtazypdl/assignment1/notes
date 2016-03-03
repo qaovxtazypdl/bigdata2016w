@@ -1,11 +1,3 @@
-test efficiency Q4 Q6 Q7
-query actual database to verify correctness
-
-intermediate aggregation
-spark-submit --class ca.uwaterloo.cs.bigdata2016w.qaovxtazypdl.assignment5.Q4 target/bigdata2016w-0.1.0-SNAPSHOT.jar --input data/TPC-H-0.1-TXT --date '1996-01-01'
-
-
-
 266
 
 
@@ -191,7 +183,6 @@ spark-submit --class ca.uwaterloo.cs.bigdata2016w.qaovxtazypdl.assignment5.Q4 ta
 
 
 (N,O,7050.0,9670325.0,9158290.0,9535801.0,26.50376,36354.605,0.052744433,266)
-
 
 (Customer#000009068,504452,427071.0,1995-12-28,0)
 (Customer#000001013,208450,392056.6,1995-11-23,0)
