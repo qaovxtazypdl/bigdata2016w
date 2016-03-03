@@ -50,16 +50,6 @@ object Q7 {
       limit 10;
     */
 
-    //(orderkey, (discount, extendedprce))
-    val lineItems = sc
-      .textFile(input + "/lineitem.tbl")
-      .flatMap(line => {
-        val tokens = line.split('|')
-        if (tokens(10) > date)
-          List((tokens(0).toInt, tokens(5).toDouble * (1-tokens(6).toDouble)))
-        else List()
-      })
-
     //(custkey, name)
     val customers = sc
       .textFile(input + "/customer.tbl")
