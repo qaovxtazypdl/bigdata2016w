@@ -1,0 +1,1 @@
+spark-submit --driver-memory 2g --class ca.uwaterloo.cs.bigdata2016w.qaovxtazypdl.assignment6.TrainSpamClassifier target/bigdata2016w-0.1.0-SNAPSHOT.jar --input data/spam/spam.train.group_x.txt --model cs489-2016w-lintool-a6-model-group_x
