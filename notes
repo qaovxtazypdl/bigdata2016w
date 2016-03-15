@@ -1,1 +1,6 @@
-spark-submit --driver-memory 2g --class ca.uwaterloo.cs.bigdata2016w.qaovxtazypdl.assignment6.TrainSpamClassifier target/bigdata2016w-0.1.0-SNAPSHOT.jar --input data/spam/spam.train.group_x.txt --model cs489-2016w-lintool-a6-model-group_x
+spark-submit --driver-memory 2g --class ca.uwaterloo.cs.bigdata2016w.qaovxtazypdl.assignment6.TrainSpamClassifier target/bigdata2016w-0.1.0-SNAPSHOT.jar --input data/spam/spam.train.group_x.txt --model cs489-2016w-qaovxtazypdl-a6-model-group_x
+spark-submit --driver-memory 2g --class ca.uwaterloo.cs.bigdata2016w.qaovxtazypdl.assignment6.ApplySpamClassifier target/bigdata2016w-0.1.0-SNAPSHOT.jar --input data/spam/spam.test.qrels.txt --output cs489-2016w-qaovxtazypdl-a6-test-group_x --model cs489-2016w-qaovxtazypdl-a6-model-group_x
+
+cat cs489-2016w-qaovxtazypdl-a6-model-group_x/* | head
+cat cs489-2016w-qaovxtazypdl-a6-test-group_x/* | sort | head -5
+./spam_eval.sh cs489-2016w-qaovxtazypdl-a6-test-group_x

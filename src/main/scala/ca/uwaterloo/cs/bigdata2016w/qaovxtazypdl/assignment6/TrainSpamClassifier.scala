@@ -13,7 +13,7 @@ import org.apache.spark.SparkConf
 object TrainSpamClassifier {
   val log = Logger.getLogger(getClass().getName())
 
-  def classify(feat : (Int, Iterable[(String, Int, Array[Int])])): List[(Int, Double)] = {
+  def train(feat : (Int, Iterable[(String, Int, Array[Int])])): Iterable[(Int, Double)] = {
     // w is the weight vector (make sure the variable is within scope)
     val w = Map[Int, Double]()
 
@@ -44,7 +44,7 @@ object TrainSpamClassifier {
       })
     })
 
-    w.toList
+    w.toIterable
   }
 
   def main(argv: Array[String]) {
@@ -67,17 +67,16 @@ object TrainSpamClassifier {
     val outputDir = new Path(model)
     FileSystem.get(sc.hadoopConfiguration).delete(outputDir, true)
 
-    val textFile = sc.textFile(input)
-
-    textFile.map(line => {
-      //clueweb09-en0008-75-37022 spam 387908 697162 426572 161118 688171 43992 908749 126841
-      val tokens = line.split(' ')
-      val docid = tokens(0)
-      val isSpam = if (tokens(1) equals "spam") 1 else 0
-      val features = tokens.drop(2).map(_.toInt)
-      (0, (docid, isSpam, features))
-    }).groupByKey(1)
-    // Then run the trainer...
-    .flatMap(classify).saveAsTextFile(model)
+    sc.textFile(input)
+      .map(line => {
+        val tokens = line.split(' ')
+        val docid = tokens(0)
+        val isSpam = if (tokens(1) equals "spam") 1 else 0
+        val features = tokens.drop(2).map(_.toInt)
+        (0, (docid, isSpam, features))
+      })
+      .groupByKey(1)
+      .flatMap(train)
+      .saveAsTextFile(model)
   }
 }
