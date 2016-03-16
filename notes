@@ -47,6 +47,15 @@ cat cs489-2016w-qaovxtazypdl-a6-test-fusion-vote/* | sort | head -5
 
 
 
+cat data/spam/spam.train.group_x.txt data/spam/spam.train.group_y.txt data/spam/spam.train.britney.txt > data/spam/spam.train.all.txt
+spark-submit --driver-memory 2g --class ca.uwaterloo.cs.bigdata2016w.qaovxtazypdl.assignment6.TrainSpamClassifier target/bigdata2016w-0.1.0-SNAPSHOT.jar --input data/spam/spam.train.all.txt --model cs489-2016w-qaovxtazypdl-a6-model-all
+spark-submit --driver-memory 2g --class ca.uwaterloo.cs.bigdata2016w.qaovxtazypdl.assignment6.ApplySpamClassifier target/bigdata2016w-0.1.0-SNAPSHOT.jar --input data/spam/spam.test.qrels.txt --output cs489-2016w-qaovxtazypdl-a6-test-all --model cs489-2016w-qaovxtazypdl-a6-model-all
+cat cs489-2016w-qaovxtazypdl-a6-model-all/* | head
+cat cs489-2016w-qaovxtazypdl-a6-test-all/* | sort | head -5
+./spam_eval.sh cs489-2016w-qaovxtazypdl-a6-test-all
+
+
+
 
 
 spark-submit --driver-memory 2g --class ca.uwaterloo.cs.bigdata2016w.qaovxtazypdl.assignment6.TrainSpamClassifier target/bigdata2016w-0.1.0-SNAPSHOT.jar --input data/spam/spam.train.britney.txt --model cs489-2016w-qaovxtazypdl-a6-model-britney-shuffle --shuffle

@@ -55,7 +55,7 @@ object ApplySpamClassifier {
     val outputDir = new Path(output)
     FileSystem.get(sc.hadoopConfiguration).delete(outputDir, true)
 
-    val modelRDD = sc.textFile(model)
+    val modelRDD = sc.textFile(model + "/part-00000")
       .map(line => {
         val tokens = line.drop(1).dropRight(1).split(',')
         (tokens(0).toInt,tokens(1).toDouble)

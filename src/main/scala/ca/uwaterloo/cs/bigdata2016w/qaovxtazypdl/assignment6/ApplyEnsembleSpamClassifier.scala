@@ -72,21 +72,21 @@ object ApplyEnsembleSpamClassifier {
         (docid, isSpam, features, 0)
       })
       .map(x => {
-        val w = model1Map.value;
+        val w = model1Map.value
         var classifierScore = 0d
         x._3.foreach(f => if (w.contains(f)) classifierScore += w(f))
         classifierScore = (if (isAveraging) classifierScore/3.0 else (if (classifierScore > 0) 1 else -1))
         (x._1, x._2, x._3, x._4 + classifierScore)
       })
       .map(x => {
-        val w = model2Map.value;
+        val w = model2Map.value
         var classifierScore = 0d
         x._3.foreach(f => if (w.contains(f)) classifierScore += w(f))
         classifierScore = (if (isAveraging) classifierScore/3.0 else (if (classifierScore > 0) 1 else -1))
         (x._1, x._2, x._3, x._4 + classifierScore)
       })
       .map(x => {
-        val w = model3Map.value;
+        val w = model3Map.value
         var classifierScore = 0d
         x._3.foreach(f => if (w.contains(f)) classifierScore += w(f))
         classifierScore = (if (isAveraging) classifierScore/3.0 else (if (classifierScore > 0) 1 else -1))
