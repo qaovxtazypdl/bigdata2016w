@@ -45,6 +45,8 @@ object TrainSpamClassifier {
       })
     })
 
+    println(w(112222))
+
     w.toIterable
   }
 
@@ -72,16 +74,20 @@ object TrainSpamClassifier {
     val outputDir = new Path(model)
     FileSystem.get(sc.hadoopConfiguration).delete(outputDir, true)
 
-    sc.textFile(input)
+    var filetext = sc.textFile(input)
       .map(line => {
         val tokens = line.split(' ')
         val docid = tokens(0)
         val isSpam = if (tokens(1) equals "spam") 1 else 0
         val features = tokens.drop(2).map(_.toInt)
-        val shufflenum = if (doShuffle) Random.nextDouble() else 0.0
+        val shufflenum = Random.nextDouble()
         (0, (docid, isSpam, features, shufflenum))
       })
-      .sortBy(_._2._4)
+
+    if (doShuffle)
+      filetext = filetext.sortBy(_._2._4)
+
+    filetext
       .groupByKey(1)
       .flatMap(train)
       .saveAsTextFile(model)
