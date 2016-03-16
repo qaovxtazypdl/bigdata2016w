@@ -4,6 +4,7 @@ import org.apache.hadoop.fs.{Path, FileSystem}
 
 import scala.collection.mutable.Map
 import scala.math._
+import scala.util.Random
 
 import org.apache.log4j._
 import org.apache.spark.SparkContext
@@ -13,7 +14,7 @@ import org.apache.spark.SparkConf
 object TrainSpamClassifier {
   val log = Logger.getLogger(getClass().getName())
 
-  def train(feat : (Int, Iterable[(String, Int, Array[Int])])): Iterable[(Int, Double)] = {
+  def train(feat : (Int, Iterable[(String, Int, Array[Int], Double)])): Iterable[(Int, Double)] = {
     // w is the weight vector (make sure the variable is within scope)
     val w = Map[Int, Double]()
 
@@ -50,17 +51,21 @@ object TrainSpamClassifier {
   def main(argv: Array[String]) {
     var input = ""
     var model = ""
+    var doShuffle = false
 
     for (i <- 0 to argv.length-1) {
       if (argv(i) equals "--input") {
         input = argv(i+1)
       } else if (argv(i) equals "--model") {
         model = argv(i+1)
+      } else if (argv(i) equals "--shuffle") {
+        doShuffle = true
       }
     }
 
     println("Input: " + input)
     println("Model: " + model)
+    println("doShuffle: " + doShuffle + "  -> test " + Random.nextDouble())
 
     val conf = new SparkConf().setAppName("TrainSpamClassifier")
     val sc = new SparkContext(conf)
@@ -73,8 +78,10 @@ object TrainSpamClassifier {
         val docid = tokens(0)
         val isSpam = if (tokens(1) equals "spam") 1 else 0
         val features = tokens.drop(2).map(_.toInt)
-        (0, (docid, isSpam, features))
+        val shufflenum = if (doShuffle) Random.nextDouble() else 0.0
+        (0, (docid, isSpam, features, shufflenum))
       })
+      .sortBy(_._2._4)
       .groupByKey(1)
       .flatMap(train)
       .saveAsTextFile(model)
