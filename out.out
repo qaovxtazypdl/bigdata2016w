@@ -1,0 +1,90 @@
+Input: data/spam/spam.train.group_x.txt
+Model: cs489-2016w-qaovxtazypdl-a6-model-group_x
+doShuffle: false  -> test 0.21647686691234647
+Input: data/spam/spam.test.qrels.txt
+Model: cs489-2016w-qaovxtazypdl-a6-model-group_x
+Output: cs489-2016w-qaovxtazypdl-a6-test-group_x
+(547993,2.019484093190069E-4)
+(577107,5.255371091500805E-5)
+(12572,-4.40967560913553E-4)
+(270898,-0.001340150007664197)
+(946531,2.560528666942676E-4)
+(643588,-0.0015502693269333243)
+(112222,1.8292974914323936E-4)
+(513963,9.858585991850935E-4)
+(484912,3.607555067670063E-4)
+(912501,-0.001426654715625957)
+(clueweb09-en0000-00-00142,spam,2.601624279252943,spam)
+(clueweb09-en0000-00-01005,ham,2.5654162439491004,spam)
+(clueweb09-en0000-00-01382,ham,2.5893946346394188,spam)
+(clueweb09-en0000-00-01383,ham,2.6190102258752614,spam)
+(clueweb09-en0000-00-03449,ham,1.500142758578532,spam)
+1-ROCA%: 17.25
+
+Input: data/spam/spam.train.group_y.txt
+Model: cs489-2016w-qaovxtazypdl-a6-model-group_y
+doShuffle: false  -> test 0.303299775305074
+Input: data/spam/spam.test.qrels.txt
+Model: cs489-2016w-qaovxtazypdl-a6-model-group_y
+Output: cs489-2016w-qaovxtazypdl-a6-test-group_y
+(577107,6.121547848356724E-7)
+(440161,6.971155820903411E-4)
+(270898,-2.3512967366433047E-4)
+(108167,1.9416710495790567E-4)
+(112222,1.1782993073132753E-4)
+(650909,-0.0021397736951189643)
+(484912,-0.0012119394997762807)
+(373814,-0.002997422310349092)
+(775555,7.302507024410652E-4)
+(746504,-3.1438134172755323E-5)
+(clueweb09-en0000-00-00142,spam,0.9822581283637455,spam)
+(clueweb09-en0000-00-01005,ham,-1.3361297298703563,ham)
+(clueweb09-en0000-00-01382,ham,-0.9636716152182709,ham)
+(clueweb09-en0000-00-01383,ham,-0.9822945289560242,ham)
+(clueweb09-en0000-00-03449,ham,-1.656499629571481,ham)
+1-ROCA%: 12.82
+
+Input: data/spam/spam.train.britney.txt
+Model: cs489-2016w-qaovxtazypdl-a6-model-britney
+doShuffle: false  -> test 0.34587293365617067
+Input: data/spam/spam.test.qrels.txt
+Model: cs489-2016w-qaovxtazypdl-a6-model-britney
+Output: cs489-2016w-qaovxtazypdl-a6-test-britney
+(178569,6.422620535957435E-7)
+(67471,2.828962139248595E-5)
+(41623,-2.1451513528335172E-4)
+(573841,-0.0011181883978962936)
+(547993,2.9877088220831504E-4)
+(714053,-3.2288743092400807E-4)
+(38420,-8.448201159943765E-6)
+(12572,0.002237741417574428)
+(577107,-0.001402201585585779)
+(440161,0.0021255900056703384)
+(clueweb09-en0000-00-00142,spam,-0.8583708130985036,ham)
+(clueweb09-en0000-00-01005,ham,-2.691199413288743,ham)
+(clueweb09-en0000-00-01382,ham,-2.486270054113964,ham)
+(clueweb09-en0000-00-01383,ham,-2.497901931217371,ham)
+(clueweb09-en0000-00-03449,ham,-2.0363114334128487,ham)
+1-ROCA%: 18.81
+
+Input: data/spam/spam.test.qrels.txt
+Model: cs489-2016w-qaovxtazypdl-a6-model-fusion
+Output: cs489-2016w-qaovxtazypdl-a6-test-fusion-average
+Method: average
+(clueweb09-en0000-00-00142,spam,0.908503864839395,spam)
+(clueweb09-en0000-00-01005,ham,-0.4873042997366662,ham)
+(clueweb09-en0000-00-01382,ham,-0.286849011564272,ham)
+(clueweb09-en0000-00-01383,ham,-0.2870620780993779,ham)
+(clueweb09-en0000-00-03449,ham,-0.7308894348019325,ham)
+1-ROCA%: 12.46
+
+Input: data/spam/spam.test.qrels.txt
+Model: cs489-2016w-qaovxtazypdl-a6-model-fusion
+Output: cs489-2016w-qaovxtazypdl-a6-test-fusion-vote
+Method: vote
+(clueweb09-en0000-00-00142,spam,1.0,spam)
+(clueweb09-en0000-00-01005,ham,-1.0,ham)
+(clueweb09-en0000-00-01382,ham,-1.0,ham)
+(clueweb09-en0000-00-01383,ham,-1.0,ham)
+(clueweb09-en0000-00-03449,ham,-1.0,ham)
+1-ROCA%: 15.41

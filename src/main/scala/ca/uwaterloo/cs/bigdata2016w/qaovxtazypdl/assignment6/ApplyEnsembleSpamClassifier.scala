@@ -12,39 +12,6 @@ import org.apache.spark.SparkConf
 object ApplyEnsembleSpamClassifier {
   val log = Logger.getLogger(getClass().getName())
 
-  def classify(feat : (Int, Iterable[(String, String, Array[Int])]), w1 : Map[Int, Double], w2 : Map[Int, Double], w3 : Map[Int, Double], method: String): Iterable[(String,String,Double,String)] = {
-    // Scores a document based on its list of features.
-    val isAveraging = method equals "average"
-
-    def spamminess(features: Array[Int]) : Double = {
-      var score = 0d
-
-      var classifierScore = 0d
-      features.foreach(f => if (w1.contains(f)) classifierScore += w1(f))
-      score += (if (isAveraging) classifierScore/3.0 else (if (classifierScore > 0) 1 else -1))
-
-      classifierScore = 0d
-      features.foreach(f => if (w2.contains(f)) classifierScore += w2(f))
-      score += (if (isAveraging) classifierScore/3.0 else (if (classifierScore > 0) 1 else -1))
-
-      classifierScore = 0d
-      features.foreach(f => if (w3.contains(f)) classifierScore += w3(f))
-      score += (if (isAveraging) classifierScore/3.0 else (if (classifierScore > 0) 1 else -1))
-
-      score
-    }
-
-    // For each instance...
-    feat._2.map(x => {
-      val isSpam = x._2 equals "spam"
-      val features = x._3
-
-      val score = spamminess(features)
-      val classification = if (score > 0) "spam" else "ham"
-      (x._1, x._2, score, classification)
-    })
-  }
-
   def main(argv: Array[String]) {
     var input = ""
     var model = ""
@@ -93,6 +60,7 @@ object ApplyEnsembleSpamClassifier {
         (tokens(0).toInt,tokens(1).toDouble)
       })
     val model3Map = sc.broadcast(model3RDD.collectAsMap())
+    val isAveraging = method equals "average"
 
     sc.textFile(input)
       .map(line => {
@@ -101,11 +69,31 @@ object ApplyEnsembleSpamClassifier {
         val docid = tokens(0)
         val isSpam = tokens(1)
         val features = tokens.drop(2).map(_.toInt)
-        (0, (docid, isSpam, features))
+        (docid, isSpam, features, 0)
       })
-      .groupByKey(1)
-      .flatMap(x => {
-        classify((x._1, x._2), model1Map.value, model2Map.value, model3Map.value, method)
+      .map(x => {
+        val w = model1Map.value;
+        var classifierScore = 0d
+        x._3.foreach(f => if (w.contains(f)) classifierScore += w(f))
+        classifierScore = (if (isAveraging) classifierScore/3.0 else (if (classifierScore > 0) 1 else -1))
+        (x._1, x._2, x._3, x._4 + classifierScore)
+      })
+      .map(x => {
+        val w = model2Map.value;
+        var classifierScore = 0d
+        x._3.foreach(f => if (w.contains(f)) classifierScore += w(f))
+        classifierScore = (if (isAveraging) classifierScore/3.0 else (if (classifierScore > 0) 1 else -1))
+        (x._1, x._2, x._3, x._4 + classifierScore)
+      })
+      .map(x => {
+        val w = model3Map.value;
+        var classifierScore = 0d
+        x._3.foreach(f => if (w.contains(f)) classifierScore += w(f))
+        classifierScore = (if (isAveraging) classifierScore/3.0 else (if (classifierScore > 0) 1 else -1))
+        (x._1, x._2, x._3, x._4 + classifierScore)
+      })
+      .map(x => {
+        (x._1, x._2, x._4, if (x._4 > 0) "spam" else "ham")
       })
       .saveAsTextFile(output)
   }
