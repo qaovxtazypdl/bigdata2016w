@@ -1,6 +1,6 @@
 package ca.uwaterloo.cs.bigdata2016w.qaovxtazypdl.assignment6
 
-import org.apache.hadoop.fs.{Path, FileSystem}
+import org.apache.hadoop.fs._
 
 import scala.collection.mutable.Map
 import scala.math._
@@ -45,8 +45,6 @@ object TrainSpamClassifier {
       })
     })
 
-    println(w(112222))
-
     w.toIterable
   }
 
@@ -84,8 +82,9 @@ object TrainSpamClassifier {
         (0, (docid, isSpam, features, shufflenum))
       })
 
-    if (doShuffle)
+    if (doShuffle) {
       filetext = filetext.sortBy(_._2._4)
+    }
 
     filetext
       .groupByKey(1)
