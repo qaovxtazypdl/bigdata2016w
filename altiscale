@@ -2,7 +2,7 @@ Question 1
 ==============
 1-ROCA%: 17.25
 1-ROCA%: 12.82
-1-ROCA%: 15.16
+1-ROCA%: 15.16/1-ROCA%: 21.28
 
 Question 2
 ==============
@@ -34,3 +34,42 @@ the trials run values are given as below.
 11
 
 And their average,
+
+
+
+
+
+
+
+
+
+
+
+[x67zhao@waterloo-ia bigdata2016w]$ hadoop fs -cat cs489-2016w-qaovxtazypdl-a6-model-group_y/* | head -5
+(577107,1.101260719236219E-7)
+(440161,5.490706981056845E-4)
+(270898,-5.533801275773172E-4)
+(108167,2.6860597325738754E-5)
+(112222,9.366390734158568E-6)
+cat: Unable to write to output stream.
+[x67zhao@waterloo-ia bigdata2016w]$ hadoop fs -cat cs489-2016w-qaovxtazypdl-a6-model-group_y/* | sort | head -5
+(1000013,-9.679256299694642E-4)
+(1000015,-9.27842483631014E-4)
+(100002,2.0083151732560145E-5)
+(10000,2.24666584311084E-7)
+(100004,-4.047173358368409E-4)
+
+
+
+(577107,6.121547848356724E-7)
+(440161,6.971155820903411E-4)
+(270898,-2.3512967366433047E-4)
+(108167,1.9416710495790567E-4)
+(112222,1.1782993073132753E-4)
+cat: Unable to write to output stream.
+[x67zhao@waterloo-ia bigdata2016w]$ hadoop fs -cat cs489-2016w-qaovxtazypdl-a6-model-group_y/* | sort | head -5
+(1000013,-0.0011075080385196752)
+(1000015,-0.0014021717503455962)
+(100002,2.9145234616427373E-5)
+(100004,-8.326122472393436E-4)
+(1000050,-0.0016958403711625865)
