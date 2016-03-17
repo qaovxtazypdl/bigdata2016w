@@ -14,7 +14,7 @@ import org.apache.spark.SparkConf
 object TrainSpamClassifier {
   val log = Logger.getLogger(getClass().getName())
 
-  def train(feat : (Int, Iterable[(String, Int, Array[Int], Double)])): Iterable[(Int, Double)] = {
+  def train(feat : Iterable[(String, Int, Array[Int], Double)]): Iterable[(Int, Double)] = {
     // w is the weight vector (make sure the variable is within scope)
     val w = Map[Int, Double]()
 
@@ -29,7 +29,7 @@ object TrainSpamClassifier {
     val delta = 0.002
 
     // For each instance...
-    feat._2.foreach(x => {
+    feat.foreach(x => {
       val isSpam = x._2
       val features = x._3
 
@@ -88,7 +88,8 @@ object TrainSpamClassifier {
 
     filetext
       .groupByKey(1)
-      .flatMap(train)
+      .flatMapValues(train)
+      .map(kv => kv._2)
       .saveAsTextFile(model)
   }
 }
