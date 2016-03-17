@@ -90,9 +90,7 @@ object TrainSpamClassifier {
       //.groupByKey(1)
       .collect()
       .map(x => {
-        x._2.map(y => {
-          println(y._1)
-        })
+        println(x._2._1)
       })
       //.flatMap(train)
       //.saveAsTextFile(model)
