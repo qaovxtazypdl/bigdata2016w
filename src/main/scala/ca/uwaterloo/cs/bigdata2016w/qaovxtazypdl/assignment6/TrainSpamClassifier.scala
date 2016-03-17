@@ -87,13 +87,13 @@ object TrainSpamClassifier {
     }
 
     filetext
-      .groupByKey(1)
-        .collect()
-        .map(x => {
-          x._2.map(y => {
-            println(y._1)
-          })
+      //.groupByKey(1)
+      .collect()
+      .map(x => {
+        x._2.map(y => {
+          println(y._1)
         })
+      })
       //.flatMap(train)
       //.saveAsTextFile(model)
   }
