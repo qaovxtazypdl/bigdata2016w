@@ -86,10 +86,9 @@ object TrainSpamClassifier {
       filetext = filetext.sortBy(_._2._4)
     }
 
-    println(filetext
+    filetext
       .groupByKey(1)
-        .count())
-      //.flatMap(train)
-      //.saveAsTextFile(model)
+      .flatMap(train)
+      .saveAsTextFile(model)
   }
 }
