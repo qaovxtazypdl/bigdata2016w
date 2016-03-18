@@ -89,7 +89,7 @@ object TrainSpamClassifier {
     val trained = filetext
       .coalesce(1, false)
       .groupByKey(1)
-      .mapPartitions(x => x.flatMap(train))
+      .flatMap(train)
 
     trained.saveAsTextFile(model)
   }

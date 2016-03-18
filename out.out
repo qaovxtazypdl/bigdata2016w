@@ -1,6 +1,6 @@
 Input: data/spam/spam.train.group_x.txt
 Model: cs489-2016w-qaovxtazypdl-a6-model-group_x
-doShuffle: false  -> test 0.8501816582397689
+doShuffle: false  -> test 0.7067566815483176
 Input: data/spam/spam.test.qrels.txt
 Model: cs489-2016w-qaovxtazypdl-a6-model-group_x
 Output: cs489-2016w-qaovxtazypdl-a6-test-group_x
@@ -22,7 +22,7 @@ Output: cs489-2016w-qaovxtazypdl-a6-test-group_x
 1-ROCA%: 17.25
 Input: data/spam/spam.train.group_y.txt
 Model: cs489-2016w-qaovxtazypdl-a6-model-group_y
-doShuffle: false  -> test 0.49672368892038155
+doShuffle: false  -> test 0.28460995673143474
 Input: data/spam/spam.test.qrels.txt
 Model: cs489-2016w-qaovxtazypdl-a6-model-group_y
 Output: cs489-2016w-qaovxtazypdl-a6-test-group_y
@@ -44,7 +44,7 @@ Output: cs489-2016w-qaovxtazypdl-a6-test-group_y
 1-ROCA%: 12.82
 Input: data/spam/spam.train.britney.txt
 Model: cs489-2016w-qaovxtazypdl-a6-model-britney
-doShuffle: false  -> test 0.07417621692904508
+doShuffle: false  -> test 0.46848908405477263
 Input: data/spam/spam.test.qrels.txt
 Model: cs489-2016w-qaovxtazypdl-a6-model-britney
 Output: cs489-2016w-qaovxtazypdl-a6-test-britney
@@ -86,7 +86,7 @@ Method: vote
 1-ROCA%: 14.78
 Input: data/spam/spam.train.all.txt
 Model: cs489-2016w-qaovxtazypdl-a6-model-all
-doShuffle: false  -> test 0.7829099843300205
+doShuffle: false  -> test 0.8933601244103158
 Input: data/spam/spam.test.qrels.txt
 Model: cs489-2016w-qaovxtazypdl-a6-model-all
 Output: cs489-2016w-qaovxtazypdl-a6-test-all
@@ -100,4 +100,12 @@ Output: cs489-2016w-qaovxtazypdl-a6-test-all
 (12572,-6.764221726297094E-4)
 (577107,-0.003097182050853357)
 (440161,0.002412769762425838)
-1-ROCA%: nan
+(clueweb09-en0000-00-00142,spam,-1.5302249240223593,ham)
+(clueweb09-en0000-00-01005,ham,-5.515868866927758,ham)
+(clueweb09-en0000-00-01382,ham,-4.838078314979635,ham)
+(clueweb09-en0000-00-01383,ham,-4.896193752631743,ham)
+(clueweb09-en0000-00-03449,ham,-3.5958428281598844,ham)
+1-ROCA%: 16.29
+Input: data/spam/spam.train.britney.txt
+Model: cs489-2016w-qaovxtazypdl-a6-model-britney-shuffle
+doShuffle: true  -> test 0.8603990354812533
