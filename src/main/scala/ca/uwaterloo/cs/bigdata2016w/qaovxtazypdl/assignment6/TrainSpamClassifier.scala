@@ -87,7 +87,7 @@ object TrainSpamClassifier {
     }
 
     println(filetext
-        .partitions)/*
+        .partitions.size)/*
       .groupByKey(1)
       .flatMap(train)
       .saveAsTextFile(model)*/
