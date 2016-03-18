@@ -86,10 +86,11 @@ object TrainSpamClassifier {
       filetext = filetext.sortBy(_._2._4)
     }
 
-    filetext
+    val trained = filetext
+      .coalesce(1, false)
       .groupByKey(1)
       .mapPartitions(x => x.flatMap(train))
-      //.flatMap(train)
-      .saveAsTextFile(model)
+
+    trained.saveAsTextFile(model)
   }
 }
