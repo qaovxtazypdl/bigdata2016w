@@ -114,7 +114,7 @@ public class BooleanRetrievalHBase extends Configured implements Tool {
     Set<Integer> set = new TreeSet<Integer>();
 
     for (byte[] st : navmap.keySet()) {
-      set.add(Integer.parseInt(new String(st)));
+      set.add(Bytes.toInt(st));
     }
 
     return set;
@@ -171,6 +171,7 @@ public class BooleanRetrievalHBase extends Configured implements Tool {
       System.out.println("gzipped collection is not seekable: use compressed version!");
       return -1;
     }
+
     Configuration conf = getConf();
     conf.addResource(new Path(args.config));
 

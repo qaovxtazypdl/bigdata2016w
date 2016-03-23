@@ -166,7 +166,7 @@ public class BuildInvertedIndexHBase extends Configured implements Tool {
     job.setJobName(BuildInvertedIndexHBase.class.getSimpleName());
     job.setJarByClass(BuildInvertedIndexHBase.class);
 
-    job.setNumReduceTasks(1);
+    job.setNumReduceTasks(args.reducers);
 
     FileInputFormat.setInputPaths(job, new Path(args.input));
 
