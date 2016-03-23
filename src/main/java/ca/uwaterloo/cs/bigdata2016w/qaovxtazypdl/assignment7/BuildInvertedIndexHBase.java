@@ -85,7 +85,7 @@ public class BuildInvertedIndexHBase extends Configured implements Tool {
   }
 
   private static class MyReducer extends
-      TableReducer<Text, PairOfInts, ImmutableBytesWritable> {
+      TableReducer<Text, PairOfInts, Text> {
     @Override
     public void reduce(Text key, Iterable<PairOfInts> values, Context context)
         throws IOException, InterruptedException {
@@ -97,7 +97,7 @@ public class BuildInvertedIndexHBase extends Configured implements Tool {
         put.add(CF, Bytes.toBytes(pair.getLeftElement()), Bytes.toBytes(pair.getRightElement()));
       }
 
-      context.write(null, put);
+      context.write(key, put);
     }
   }
 
