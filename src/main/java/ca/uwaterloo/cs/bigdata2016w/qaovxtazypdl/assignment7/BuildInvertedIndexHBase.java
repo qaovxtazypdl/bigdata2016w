@@ -50,22 +50,6 @@ public class BuildInvertedIndexHBase extends Configured implements Tool {
 
   public static final String[] FAMILIES = { "p" };
   public static final byte[] CF = FAMILIES[0].getBytes();
-  public static final byte[] COUNT = "count".getBytes();
-
-  public static class MyTableReducer extends
-    TableReducer<Text, PairOfWritables<IntWritable, ArrayListWritable<PairOfInts>>, ImmutableBytesWritable>  {
-    public void reduce(Text key, Iterable<PairOfWritables<IntWritable, ArrayListWritable<PairOfInts>>> values, Context context)
-        throws IOException, InterruptedException {
-      int sum = 0;
-      /*for (PairOfWritables<IntWritable, ArrayListWritable<PairOfInts>> val : values) {
-        sum += val.get();
-      }
-      Put put = new Put(Bytes.toBytes(key.toString()));
-      put.add(CF, COUNT, Bytes.toBytes(sum));
-
-      context.write(null, put);*/
-    }
-  }
 
   private static class MyMapper extends Mapper<LongWritable, Text, Text, PairOfInts> {
     private static final Text WORD = new Text();
@@ -101,27 +85,19 @@ public class BuildInvertedIndexHBase extends Configured implements Tool {
   }
 
   private static class MyReducer extends
-      Reducer<Text, PairOfInts, Text, PairOfWritables<IntWritable, ArrayListWritable<PairOfInts>>> {
-    private final static IntWritable DF = new IntWritable();
-
+      TableReducer<Text, PairOfInts, ImmutableBytesWritable> {
     @Override
     public void reduce(Text key, Iterable<PairOfInts> values, Context context)
         throws IOException, InterruptedException {
       Iterator<PairOfInts> iter = values.iterator();
-      ArrayListWritable<PairOfInts> postings = new ArrayListWritable<PairOfInts>();
+      Put put = new Put(Bytes.toBytes(key.toString()));
 
-      int df = 0;
       while (iter.hasNext()) {
-        postings.add(iter.next().clone());
-        df++;
+        PairOfInts pair = iter.next().clone();
+        put.add(CF, Bytes.toBytes(pair.getLeftElement()), Bytes.toBytes(pair.getRightElement()));
       }
 
-      // Sort the postings by docno ascending.
-      Collections.sort(postings);
-
-      DF.set(df);
-      context.write(key,
-          new PairOfWritables<IntWritable, ArrayListWritable<PairOfInts>>(DF, postings));
+      context.write(null, put);
     }
   }
 
@@ -196,14 +172,9 @@ public class BuildInvertedIndexHBase extends Configured implements Tool {
 
     job.setMapOutputKeyClass(Text.class);
     job.setMapOutputValueClass(PairOfInts.class);
-    job.setOutputKeyClass(Text.class);
-    job.setOutputValueClass(PairOfWritables.class);
-    job.setOutputFormatClass(MapFileOutputFormat.class);
 
     job.setMapperClass(MyMapper.class);
-    job.setReducerClass(MyReducer.class);
-
-    TableMapReduceUtil.initTableReducerJob(args.table, MyTableReducer.class, job);
+    TableMapReduceUtil.initTableReducerJob(args.table, MyReducer.class, job);
 
     long startTime = System.currentTimeMillis();
     job.waitForCompletion(true);
