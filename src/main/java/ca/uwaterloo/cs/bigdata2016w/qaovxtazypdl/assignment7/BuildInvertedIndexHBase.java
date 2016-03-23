@@ -34,8 +34,8 @@ import tl.lin.data.pair.PairOfInts;
 import tl.lin.data.pair.PairOfObjectInt;
 import tl.lin.data.pair.PairOfWritables;
 
-public class BuildInvertedIndex extends Configured implements Tool {
-  private static final Logger LOG = Logger.getLogger(BuildInvertedIndex.class);
+public class BuildInvertedIndexHBase extends Configured implements Tool {
+  private static final Logger LOG = Logger.getLogger(BuildInvertedIndexHBase.class);
 
   private static class MyMapper extends Mapper<LongWritable, Text, Text, PairOfInts> {
     private static final Text WORD = new Text();
@@ -95,7 +95,7 @@ public class BuildInvertedIndex extends Configured implements Tool {
     }
   }
 
-  private BuildInvertedIndex() {}
+  private BuildInvertedIndexHBase() {}
 
   public static class Args {
     @Option(name = "-input", metaVar = "[path]", required = true, usage = "input path")
@@ -120,13 +120,13 @@ public class BuildInvertedIndex extends Configured implements Tool {
       return -1;
     }
 
-    LOG.info("Tool: " + BuildInvertedIndex.class.getSimpleName());
+    LOG.info("Tool: " + BuildInvertedIndexHBase.class.getSimpleName());
     LOG.info(" - input path: " + args.input);
     LOG.info(" - output path: " + args.output);
 
     Job job = Job.getInstance(getConf());
-    job.setJobName(BuildInvertedIndex.class.getSimpleName());
-    job.setJarByClass(BuildInvertedIndex.class);
+    job.setJobName(BuildInvertedIndexHBase.class.getSimpleName());
+    job.setJarByClass(BuildInvertedIndexHBase.class);
 
     job.setNumReduceTasks(1);
 
@@ -157,6 +157,6 @@ public class BuildInvertedIndex extends Configured implements Tool {
    * Dispatches command-line arguments to the tool via the {@code ToolRunner}.
    */
   public static void main(String[] args) throws Exception {
-    ToolRunner.run(new BuildInvertedIndex(), args);
+    ToolRunner.run(new BuildInvertedIndexHBase(), args);
   }
 }

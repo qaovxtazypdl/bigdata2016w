@@ -26,12 +26,12 @@ import tl.lin.data.array.ArrayListWritable;
 import tl.lin.data.pair.PairOfInts;
 import tl.lin.data.pair.PairOfWritables;
 
-public class BooleanRetrieval extends Configured implements Tool {
+public class BooleanRetrievalHBase extends Configured implements Tool {
   private MapFile.Reader index;
   private FSDataInputStream collection;
   private Stack<Set<Integer>> stack;
 
-  private BooleanRetrieval() {}
+  private BooleanRetrievalHBase() {}
 
   private void initialize(String indexPath, String collectionPath, FileSystem fs) throws IOException {
     index = new MapFile.Reader(new Path(indexPath + "/part-r-00000"), fs.getConf());
@@ -172,6 +172,6 @@ public class BooleanRetrieval extends Configured implements Tool {
    * Dispatches command-line arguments to the tool via the {@code ToolRunner}.
    */
   public static void main(String[] args) throws Exception {
-    ToolRunner.run(new BooleanRetrieval(), args);
+    ToolRunner.run(new BooleanRetrievalHBase(), args);
   }
 }
