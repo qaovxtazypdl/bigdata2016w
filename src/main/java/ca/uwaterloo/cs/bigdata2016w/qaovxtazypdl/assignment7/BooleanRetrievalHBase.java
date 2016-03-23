@@ -6,7 +6,15 @@ import java.io.InputStreamReader;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeSet;
+import java.util.NavigableMap;
 
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.client.Get;
+import org.apache.hadoop.hbase.client.HConnection;
+import org.apache.hadoop.hbase.client.HConnectionManager;
+import org.apache.hadoop.hbase.client.HTableInterface;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -27,14 +35,17 @@ import tl.lin.data.pair.PairOfInts;
 import tl.lin.data.pair.PairOfWritables;
 
 public class BooleanRetrievalHBase extends Configured implements Tool {
-  private MapFile.Reader index;
+  private HTableInterface table;
   private FSDataInputStream collection;
   private Stack<Set<Integer>> stack;
 
   private BooleanRetrievalHBase() {}
 
-  private void initialize(String indexPath, String collectionPath, FileSystem fs) throws IOException {
-    index = new MapFile.Reader(new Path(indexPath + "/part-r-00000"), fs.getConf());
+  private void initialize(String tablestring, String collectionPath, FileSystem fs) throws IOException {
+    Configuration hbaseConfig = HBaseConfiguration.create(getConf());
+    HConnection hbaseConnection = HConnectionManager.createConnection(hbaseConfig);
+
+    table = hbaseConnection.getTable(tablestring);
     collection = fs.open(new Path(collectionPath));
     stack = new Stack<Set<Integer>>();
   }
@@ -97,10 +108,13 @@ public class BooleanRetrievalHBase extends Configured implements Tool {
   }
 
   private Set<Integer> fetchDocumentSet(String term) throws IOException {
+    Get get = new Get(Bytes.toBytes(term));
+    Result result = table.get(get);
+    NavigableMap<byte[],byte[]> navmap = result.getFamilyMap("p".getBytes());
     Set<Integer> set = new TreeSet<Integer>();
 
-    for (PairOfInts pair : fetchPostings(term)) {
-      set.add(pair.getLeftElement());
+    for (byte[] st : navmap.keySet()) {
+      set.add(Integer.parseInt(new String(st)));
     }
 
     return set;
@@ -112,7 +126,6 @@ public class BooleanRetrievalHBase extends Configured implements Tool {
         new PairOfWritables<IntWritable, ArrayListWritable<PairOfInts>>();
 
     key.set(term);
-    index.get(key, value);
 
     return value.getRightElement();
   }
@@ -126,14 +139,17 @@ public class BooleanRetrievalHBase extends Configured implements Tool {
   }
 
   public static class Args {
-    @Option(name = "-index", metaVar = "[path]", required = true, usage = "index path")
-    public String index;
-
     @Option(name = "-collection", metaVar = "[path]", required = true, usage = "collection path")
     public String collection;
 
     @Option(name = "-query", metaVar = "[term]", required = true, usage = "query")
     public String query;
+
+    @Option(name = "-table", metaVar = "[name]", required = true, usage = "HBase table")
+    public String table;
+
+    @Option(name = "-config", metaVar = "[path]", required = true, usage = "HBase config")
+    public String config;
   }
 
   /**
@@ -155,10 +171,11 @@ public class BooleanRetrievalHBase extends Configured implements Tool {
       System.out.println("gzipped collection is not seekable: use compressed version!");
       return -1;
     }
+    Configuration conf = getConf();
+    conf.addResource(new Path(args.config));
 
     FileSystem fs = FileSystem.get(new Configuration());
-
-    initialize(args.index, args.collection, fs);
+    initialize(args.table, args.collection, fs);
 
     System.out.println("Query: " + args.query);
     long startTime = System.currentTimeMillis();
