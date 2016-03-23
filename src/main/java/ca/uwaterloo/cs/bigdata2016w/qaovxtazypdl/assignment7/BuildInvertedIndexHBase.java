@@ -52,17 +52,18 @@ public class BuildInvertedIndexHBase extends Configured implements Tool {
   public static final byte[] CF = FAMILIES[0].getBytes();
   public static final byte[] COUNT = "count".getBytes();
 
-  public static class MyTableReducer extends TableReducer<Text, IntWritable, ImmutableBytesWritable>  {
-    public void reduce(Text key, Iterable<IntWritable> values, Context context)
+  public static class MyTableReducer extends
+    TableReducer<Text, PairOfWritables<IntWritable, ArrayListWritable<PairOfInts>>, ImmutableBytesWritable>  {
+    public void reduce(Text key, Iterable<PairOfWritables<IntWritable, ArrayListWritable<PairOfInts>>> values, Context context)
         throws IOException, InterruptedException {
       int sum = 0;
-      for (IntWritable val : values) {
+      /*for (PairOfWritables<IntWritable, ArrayListWritable<PairOfInts>> val : values) {
         sum += val.get();
       }
       Put put = new Put(Bytes.toBytes(key.toString()));
       put.add(CF, COUNT, Bytes.toBytes(sum));
 
-      context.write(null, put);
+      context.write(null, put);*/
     }
   }
 
