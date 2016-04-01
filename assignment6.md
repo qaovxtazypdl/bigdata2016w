@@ -46,9 +46,8 @@ TrainSpamClassifier: 15/15
 ApplySpamClassifier: 5/5
 ApplyEnsembleClassifier: 6/6
 Shuffle implementation: 5/5
-Question Answers: 12/15
+Question Answers: 15/15
 Runs on Altiscale: 10/10
-Total: 57/60
+Total: 60/60
 
-- Q4 score is higher than expected (14% +- 3%) likely due to some unaccounted for non-determinism
 
